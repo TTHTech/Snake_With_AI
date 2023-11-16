@@ -1,3 +1,4 @@
+import pygame
 class Button():
 	def __init__(self, image, pos, text_input, font, base_color, hovering_color):
 		self.image = image
@@ -27,3 +28,16 @@ class Button():
 			self.text = self.font.render(self.text_input, True, self.hovering_color)
 		else:
 			self.text = self.font.render(self.text_input, True, self.base_color)
+
+	def draw(self, screen):
+		# If the button has an image, draw it
+		if self.image:
+			screen.blit(self.image, (self.x_pos, self.y_pos))
+		# Otherwise, draw a rectangle and text
+		else:
+			# Example: draw a simple rectangle as the button
+			pygame.draw.rect(screen, self.base_color, self.rect)
+			# Draw the text
+			screen.blit(self.text, (self.rect.x + 20, self.rect.y + 10))
+
+	# You can also add more styling as needed

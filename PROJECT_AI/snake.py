@@ -1,6 +1,6 @@
 import pygame, sys, random
 from pygame.math import Vector2
-
+from button import Button
 
 class SNAKE:
     def __init__(self):
@@ -144,6 +144,7 @@ class MAIN:
     def __init__(self):
         self.snake = SNAKE()
         self.fruit = FRUIT()
+        self.path = []
 
     def update(self):
         self.snake.move_snake()
@@ -169,7 +170,7 @@ class MAIN:
     def check_fail(self):
         # kiểm tra xem con rắn có ở ngoài màn hình không
         # kiểm tra trái phải và trên dưới vì nó là 1 vector nên không thể so sánh với 1 số được
-        if not 0 <= self.snake.body[0].x < cell_number or not 0 <= self.snake.body[0].y < cell_number:
+        if not 0 <= self.snake.body[0].x < cell_number or not 0 <= self.snake.body[0].y < cell_number :
             self.game_over()  # game sẽ kết thúc và bắt đầu lại
         # kiểm tra xem đầu con rắn có va chạm với bắt kì vị trí nào cuủa nó không
         # lấy tất cả các phần tử trừ đầu ra snake.body[1:]
@@ -207,38 +208,55 @@ class MAIN:
         screen.blit(apple, apple_rect)
         pygame.draw.rect(screen, (56, 74, 12), bg_rect, 2)
 
-    def Find_Path_BFS(self, food):
-        queue = [(self.snake.body[0], [])]
-        visited = set()
-        while queue:
-            current, path = queue.pop(0)
-            if tuple(current) == tuple(food):  # Chuyển Vector2 thành tuple
-                return path
-            if tuple(current) in visited:  # Chuyển Vector2 thành tuple
-                continue
-            visited.add(tuple(current))  # Chuyển Vector2 thành tuple
-            for move in [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1)]:
-                next_position = current + move
-                if (
-                        0 <= next_position.x < cell_number
-                        and 0 <= next_position.y < cell_number
-                        and next_position not in self.snake.body
-                ):
-                    queue.append((next_position, path + [next_position]))
+    # def Find_Path_BFS(self, food):
+    #     queue = [(self.snake.body[0], [])]
+    #     visited = set()
+    #     while queue:
+    #         current, path = queue.pop(0)
+    #         if tuple(current) == tuple(food):  # Chuyển Vector2 thành tuple
+    #             return path
+    #         if tuple(current) in visited:  # Chuyển Vector2 thành tuple
+    #             continue
+    #         visited.add(tuple(current))  # Chuyển Vector2 thành tuple
+    #         for move in [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1)]:
+    #             next_position = current + move
+    #             if (
+    #                     0 <= next_position.x < cell_number
+    #                     and 0 <= next_position.y < cell_number
+    #                     and next_position not in self.snake.body
+    #             ):
+    #                 queue.append((next_position, path + [next_position]))
+
+    def draw_board_with_border(self):
+        dark_green = (167, 227, 93)
+        light_green = (196, 237, 100)
+        border_color = (87, 145, 42)  # Màu viền
+
+        # Vẽ các ô trên bảng
+        for row in range(cell_number):
+            for col in range(cell_number):
+                x0, y0 = col * cell_size, row * cell_size
+                color = dark_green if (row + col) % 2 == 0 else light_green
+                pygame.draw.rect(screen, color, pygame.Rect(x0, y0, cell_size, cell_size))
+
+        # Vẽ viền xung quanh bảng
+        pygame.draw.rect(screen, border_color, pygame.Rect(0, 0, cell_number * cell_size, cell_number * cell_size), 10)
 
 
-
+#MENU=================================================================
 #===============================================================================
 pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.init()
 cell_size = 20
 cell_number = 40
-screen = pygame.display.set_mode((cell_number * cell_size, cell_number * cell_size))
+screen = pygame.display.set_mode((1200, cell_number * cell_size))
 clock = pygame.time.Clock()
 apple = pygame.image.load('Graphics/apple.png' ).convert_alpha()
 apple = pygame.transform.scale(apple, (20, 20))
 game_font = pygame.font.Font('Font/PoetsenOne-Regular.ttf', 25)
-
-
 SCREEN_UPDATE = pygame.USEREVENT
-pygame.time.set_timer(SCREEN_UPDATE, 10)
+pygame.time.set_timer(SCREEN_UPDATE, 30)
+
+
+
+

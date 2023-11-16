@@ -3,16 +3,18 @@ from button import Button
 from snake import *
 import Snake_UCS
 import Snake_Dijikstra
+import Snake_AStar
+import Snake_HillClimbing
 # Initialize pygame and the screen
-from Snake_BFS import *
+import Snake_BFS
 pygame.init()
-cell_size = 40
-cell_number = 20
+cell_size = 20
+cell_number = 40
 SCREEN = pygame.display.set_mode((cell_size * cell_number, cell_size * cell_number))
 pygame.display.set_caption("Snake")
-BG = pygame.image.load("assets/Background.png")
+BG = pygame.image.load("assets/BackGround_s1.png")
+BG = pygame.transform.scale(BG, (cell_size * cell_number, cell_size * cell_number))
 font = "assets/font.ttf"
-
 def get_font(size):
     return pygame.font.Font(font, size)
 
@@ -41,50 +43,112 @@ def play():
                         main_game.snake.direction = Vector2(-1, 0)
 
         screen.fill((175, 215, 70))
+        main_game.draw_board_with_border()
         main_game.draw_elements()
         pygame.display.update()
         clock.tick(60)
 
 def bfs_option():
     print("BFS Option Selected")
+    print("A* Option Selected")
     main_game = MAIN()
-    running = True
-    while running:
+    while True:
+        path_to_fruit = Snake_BFS.Snake_BFS.bfs(main_game.snake, main_game.fruit)
+        Snake_BFS.Snake_BFS.follow_path(main_game.snake, path_to_fruit)
+        print(path_to_fruit)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                pygame.quit()
+                sys.exit()
             if event.type == SCREEN_UPDATE:
                 main_game.update()
-                path_to_food = main_game.Find_Path_BFS(main_game.fruit.pos)
-                if path_to_food:
-                    next_move = path_to_food[0] - main_game.snake.body[0]
-                    main_game.snake.direction = Vector2(next_move.x, next_move.y)
-
-        SCREEN.fill((175, 215, 70))
+        screen.fill((175, 215, 70))
+        main_game.draw_board_with_border()
         main_game.draw_elements()
         pygame.display.update()
         clock.tick(60)
-
-    pygame.quit()
-    sys.exit()
 
 def dfs_option():
     print("DFS Option Selected")
 
 def ucs_option():
     print("UCS Option Selected")
+    print("A* Option Selected")
+    main_game = MAIN()
+    while True:
+        path_to_fruit = Snake_UCS.Snake_UCS.ucs(main_game.snake, main_game.fruit)
+        Snake_UCS.Snake_UCS.follow_path(main_game.snake, path_to_fruit)
+        print(path_to_fruit)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == SCREEN_UPDATE:
+                main_game.update()
+        screen.fill((175, 215, 70))
+        main_game.draw_board_with_border()
+        main_game.draw_elements()
+        pygame.display.update()
+        clock.tick(60)
 def astar_option():
     print("A* Option Selected")
+    main_game = MAIN()
+    while True:
+        path_to_fruit = Snake_AStar.Snake_AStar.a_star(main_game.snake, main_game.fruit)
+        Snake_AStar.Snake_AStar.follow_path(main_game.snake, path_to_fruit)
+        print(path_to_fruit)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == SCREEN_UPDATE:
+                main_game.update()
+        screen.fill((175, 215, 70))
+        main_game.draw_board_with_border()
+        main_game.draw_elements()
+        pygame.display.update()
+        clock.tick(60)
 
 def greedy_option():
     print("Greedy Option Selected")
 
 def dijkstra_option():
-    print("Dijkstra's Option Selected")
+    main_game = MAIN()
+    while True:
+        path_to_fruit = Snake_Dijikstra.Snake_Dijkstra.dijkstra(main_game.snake, main_game.fruit)
+        Snake_Dijikstra.Snake_Dijkstra.follow_path(main_game.snake, path_to_fruit)
+        print(path_to_fruit)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == SCREEN_UPDATE:
+                main_game.update()
+        screen.fill((175, 215, 70))
+        main_game.draw_board_with_border()
+        main_game.draw_elements()
+        pygame.display.update()
+        clock.tick(60)
+
 
 def hillclimbing_option():
     print("Hill Climbing Option Selected")
-
+    main_game = MAIN()
+    while True:
+        path_to_fruit = Snake_HillClimbing.Snake_HillClimbing.hill_climbing(main_game.snake, main_game.fruit)
+        Snake_HillClimbing.Snake_HillClimbing.follow_path(main_game.snake, path_to_fruit)
+        print(path_to_fruit)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == SCREEN_UPDATE:
+                main_game.update()
+        screen.fill((175, 215, 70))
+        main_game.draw_board_with_border()
+        main_game.draw_elements()
+        pygame.display.update()
+        clock.tick(60)
 # Mapping of options to functions
 option_functions = {
     "BFS": bfs_option,
@@ -98,6 +162,8 @@ option_functions = {
 
 
 def options():
+    options_bg = pygame.image.load("assets/BackGround_s1.png")
+    options_bg = pygame.transform.scale(options_bg, (cell_size * cell_number, cell_size * cell_number))
     button_width = 200
     button_height = 50
     button_spacing = 90  # Khoảng cách giữa các nút
@@ -119,7 +185,7 @@ def options():
         button_pos_y = start_y + i * (button_height + button_spacing)
         button_image = pygame.image.load(option_image)
         buttons_left.append(Button(image=button_image, pos=(left_column_x, button_pos_y),
-                              text_input=option_text, font=get_font(35), base_color="white", hovering_color="Green"))
+                              text_input=option_text, font=get_font(35), base_color="yellow", hovering_color="white"))
 
     # Tạo các nút cho cột bên phải
     buttons_right = []
@@ -131,7 +197,7 @@ def options():
         button_pos_y = start_y + i * (button_height + button_spacing)
         button_image = pygame.image.load(option_image)
         buttons_right.append(Button(image=button_image, pos=(right_column_x, button_pos_y),
-                              text_input=option_text, font=get_font(35), base_color="white", hovering_color="Green"))
+                              text_input=option_text, font=get_font(35), base_color="yellow", hovering_color="white"))
 
     # Gộp các nút từ cả hai cột vào một danh sách duy nhất để xử lý sự kiện
     buttons = buttons_left + buttons_right
@@ -140,11 +206,11 @@ def options():
     back_button_image = pygame.image.load("assets/button6.png")
     button_pos_y += button_height + button_spacing
     buttons.append(Button(image=back_button_image, pos=(600, button_pos_y),
-                          text_input="BACK", font=get_font(35), base_color="white", hovering_color="Green"))
+                          text_input="BACK", font=get_font(35), base_color="yellow", hovering_color="white"))
 
     while True:
         OPTIONS_MOUSE_POS = pygame.mouse.get_pos()
-        SCREEN.fill((0, 0, 0))
+        SCREEN.blit(options_bg, (0, 0))
 
         for button in buttons:
             button.changeColor(OPTIONS_MOUSE_POS)

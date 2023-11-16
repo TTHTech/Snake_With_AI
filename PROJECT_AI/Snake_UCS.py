@@ -1,8 +1,8 @@
 from pygame.math import Vector2
 from queue import PriorityQueue
 import snake
-cell_size = 40
-cell_number = 20
+cell_size = 20
+cell_number = 40
 
 class Snake_UCS:
 	def ucs(snake, fruit):

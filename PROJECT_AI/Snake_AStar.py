@@ -1,28 +1,35 @@
 from pygame.math import Vector2
-from queue import Queue
-import snake
+from queue import PriorityQueue
+
 cell_size = 20
 cell_number = 40
 
-class Snake_BFS:
-    def bfs(snake, food):
-        start = tuple(snake.body[0])
-        goal = tuple(food.pos)
+class Snake_AStar:
+    def heuristic(a, b):
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
-        frontier = Queue()
-        frontier.put(start)
+    def a_star(snake, fruit):
+        start = tuple(snake.body[0])
+        goal = tuple(fruit.pos)
+
+        frontier = PriorityQueue()
+        frontier.put((0, start))
         came_from = {start: None}
+        cost_so_far = {start: 0}
 
         while not frontier.empty():
-            current = frontier.get()
+            current = frontier.get()[1]
 
             if current == goal:
                 break
 
             for next in [(current[0], current[1] + 1), (current[0], current[1] - 1), (current[0] + 1, current[1]), (current[0] - 1, current[1])]:
-                if next not in came_from:
+                new_cost = cost_so_far[current] + 1
+                if next not in cost_so_far or new_cost < cost_so_far[next]:
                     if 0 <= next[0] < cell_number and 0 <= next[1] < cell_number and next not in map(tuple, snake.body):
-                        frontier.put(next)
+                        cost_so_far[next] = new_cost
+                        priority = new_cost + Snake_AStar.heuristic(goal, next)
+                        frontier.put((priority, next))
                         came_from[next] = current
 
         path = []
