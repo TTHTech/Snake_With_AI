@@ -1,0 +1,6 @@
+Thuật toán: UCS
+Chế độ hiện tại: easy
+Tốc độ rắn: 30
+Tổng số nút: 356382
+Thời gian chạy chương trình: 15.13
+Số nút(chi phí): 837

@@ -1,6 +1,5 @@
 import sys
 from pygame.math import Vector2
-from queue import Queue
 from queue import PriorityQueue
 import snake
 
@@ -15,12 +14,8 @@ class Snake_Greedy:
         goal = tuple(fruit.pos)
 
         frontier = PriorityQueue()
-        frontier.put((0, start))
+        frontier.put((Snake_Greedy.heuristic(start, goal), start))
         came_from = {start: None}
-        cost_so_far = {start: 0}
-
-        # Chuyển danh sách các chướng ngại vật thành tập hợp (set) các tuple để dễ dàng kiểm tra
-        obstacles_set = {tuple(obstacle.pos) for obstacle in obstacles}
         visited_cells = []
 
         while not frontier.empty():
@@ -32,12 +27,9 @@ class Snake_Greedy:
 
             for next in [(current[0], current[1] + 1), (current[0], current[1] - 1), (current[0] + 1, current[1]),
                          (current[0] - 1, current[1])]:
-                if 0 <= next[0] < cell_number and 0 <= next[1] < cell_number and next not in map(tuple,
-                                                                                                 snake.body) and next not in obstacles_set:
-                    new_cost = cost_so_far[current] + 1
-                    if next not in cost_so_far or new_cost < cost_so_far[next]:
-                        cost_so_far[next] = new_cost
-                        priority = new_cost + Snake_Greedy.heuristic(goal, next)
+                if 0 <= next[0] < cell_number and 0 <= next[1] < cell_number and next not in map(tuple, snake.body):
+                    if next not in came_from:
+                        priority = Snake_Greedy.heuristic(next, goal)
                         frontier.put((priority, next))
                         came_from[next] = current
 
@@ -52,10 +44,11 @@ class Snake_Greedy:
             elif (came_from[current][0] - current[0], came_from[current][1] - current[1]) == (0, -1):
                 path.append('DOWN')
             current = came_from[current]
+
         return visited_cells, path[::-1]
 
     def heuristic(a, b):
-        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])  # math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
 
     def follow_path(snake, path):
         if len(path) > 0:

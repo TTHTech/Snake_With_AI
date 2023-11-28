@@ -22,6 +22,7 @@ snake_run = -1
 pygame.init()
 cell_size = 20
 cell_number = 40
+block = 0
 SCREEN = pygame.display.set_mode((cell_size * cell_number, cell_size * cell_number))
 pygame.display.set_caption("Snake")
 BG = pygame.image.load("assets/BackGround_s1.png")
@@ -106,6 +107,7 @@ def bfs_option():
     global snake_speed
     global snake_time
     global snake_run
+    global block
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
     main_game = MAIN(n_obstacles)
     path_to_fruit_view0 = []
@@ -139,6 +141,7 @@ def bfs_option():
         snake_time = "{:.2f}".format(total_time)
         draw_time("{:.2f}".format(total_time))
         print("số nút là ", snake_run)
+        save_to_file()
         # pygame.display.update()
         clock.tick(60)
 
@@ -167,6 +170,7 @@ def dfs_option():
     global snake_speed
     global snake_time
     global snake_run
+    global block
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
     main_game = MAIN(n_obstacles)
     start_time = time.time()
@@ -198,6 +202,7 @@ def dfs_option():
         total_time = end_time - start_time
         snake_time = "{:.2f}".format(total_time)
         draw_time("{:.2f}".format(total_time))
+        save_to_file()
         # pygame.display.update()
         clock.tick(60)
 
@@ -210,6 +215,7 @@ def ucs_option():
     global snake_speed
     global snake_time
     global snake_run
+    global block
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
     main_game = MAIN(n_obstacles)  # Sử dụng số lượng chướng ngại vật đã được thiết lập
     sk = int(0)
@@ -252,6 +258,7 @@ def ucs_option():
         total_time = end_time - start_time
         snake_time = "{:.2f}".format(total_time)
         draw_time("{:.2f}".format(total_time))
+        save_to_file()
         # pygame.display.update()
         clock.tick(60)
 
@@ -264,6 +271,7 @@ def astar_option():
     global snake_speed
     global snake_time
     global snake_run
+    global block
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
     main_game = MAIN(n_obstacles)
     path_to_fruit_view0 = []
@@ -302,6 +310,7 @@ def astar_option():
         total_time = end_time - start_time
         snake_time = "{:.2f}".format(total_time)
         draw_time("{:.2f}".format(total_time))
+        save_to_file()
         # pygame.display.update()
         clock.tick(60)
 
@@ -309,11 +318,12 @@ def astar_option():
 def greedy_option():
     print("Greedy Option Selected")
     global current_mode
-    current_mode = 'BFS'
+    current_mode = 'GREEDY'
     global n_obstacles
     global snake_speed
     global snake_time
     global snake_run
+    global block
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
     main_game = MAIN(n_obstacles)
     path_to_fruit_view0 = []
@@ -351,17 +361,19 @@ def greedy_option():
         end_time = time.time()
         total_time = end_time - start_time
         draw_time("{:.2f}".format(total_time))
+        save_to_file()
         # pygame.display.update()
         clock.tick(60)
 
 
 def dijkstra_option():
     global current_mode
-    current_mode = 'BFS'
+    current_mode = 'DIJKSTRA'
     global n_obstacles
     global snake_speed
     global snake_time
     global snake_run
+    global block
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
     main_game = MAIN(n_obstacles)
     path_to_fruit_view0 = []
@@ -402,17 +414,19 @@ def dijkstra_option():
         total_time = end_time - start_time
         snake_time = "{:.2f}".format(total_time)
         draw_time("{:.2f}".format(total_time))
+        save_to_file()
         # pygame.display.update()
         clock.tick(60)
 
 
 def hillclimbing_option():
     global current_mode
-    current_mode = 'BFS'
+    current_mode = 'HCB'
     global n_obstacles
     global snake_speed
     global snake_time
     global snake_run
+    global block
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
     print("Hill Climbing Option Selected")
     main_game = MAIN(n_obstacles)
@@ -453,6 +467,7 @@ def hillclimbing_option():
         total_time = end_time - start_time
         snake_time = "{:.2f}".format(total_time)
         draw_time("{:.2f}".format(total_time))
+        save_to_file()
         # pygame.display.update()
         clock.tick(60)
 
@@ -843,6 +858,24 @@ def game_over():
                     return
 
         pygame.display.update()
+
+
+current_directory = os.path.dirname(os.path.abspath(__file__))
+file_path = os.path.join(current_directory, 'Snake.txt')
+
+def save_to_file():
+    global snake_speed, snake_time, snake_run, current_mode, current_level
+    try:
+        with open(file_path, 'w', encoding='utf-8') as file:
+            file.write(f"Thuật toán: {current_mode}\n")
+            file.write(f"Chế độ hiện tại: {current_level}\n")
+            file.write(f"Tốc độ rắn: {snake_speed}\n")
+            file.write(f"Tổng số nút: {block}\n")
+            file.write(f"Thời gian chạy chương trình: {snake_time}\n")
+            file.write(f"Số nút(chi phí): {snake_run}\n")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
 
 
 def main_menu():

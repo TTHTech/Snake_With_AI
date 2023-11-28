@@ -10,7 +10,7 @@ import Snake_DFS
 # Initialize pygame and the screen
 import Snake_BFS
 current_mode = 'manual'
-current_level = 'not' 
+current_level = 'easy'
 snake_speed = 50
 pygame.init()
 cell_size = 20
@@ -228,7 +228,7 @@ def astar_option():
 def greedy_option():
     print("Greedy Option Selected")
     global current_mode
-    current_mode = 'BFS'
+    current_mode = 'GREEDY'
     global n_obstacles
     global snake_speed
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
@@ -264,7 +264,7 @@ def greedy_option():
 
 def dijkstra_option():
     global current_mode
-    current_mode = 'BFS'
+    current_mode = 'DIJKSTRA'
     global n_obstacles
     global snake_speed
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
@@ -302,7 +302,7 @@ def dijkstra_option():
 
 def hillclimbing_option():
     global current_mode
-    current_mode = 'BFS'
+    current_mode = 'HCB'
     global n_obstacles
     global snake_speed
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
