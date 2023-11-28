@@ -153,7 +153,6 @@ class MAIN:
         # Lưu vị trí của chướng ngại vật
         obstacles_positions = [tuple(obstacle.pos) for obstacle in self.obstacles]
 
-        # Khởi tạo thức ăn, tránh vị trí của chướng ngại vật
         self.fruit = FRUIT(obstacles_positions)
 
         self.GameOver = False
@@ -217,9 +216,7 @@ class MAIN:
         # kiểm tra xem đầu con rắn có va chạm với bắt kì vị trí nào cuủa nó không
         # lấy tất cả các phần tử trừ đầu ra snake.body[1:]
         for block in self.snake.body[1:]:
-            if len(self.snake.body) == 3 and self.snake.body[0] == Vector2(5, 10) and self.snake.body[1] == Vector2(5,
-                                                                                                                    10) and \
-                    self.snake.body[2] == Vector2(4, 10):
+            if len(self.snake.body) == 3 and self.snake.body[0] == Vector2(5, 10) and self.snake.body[1] == Vector2(5,10) and self.snake.body[2] == Vector2(4, 10):
                 self.snake.reset()
             elif self.snake.body[0] == block:
                 self.snake.reset()

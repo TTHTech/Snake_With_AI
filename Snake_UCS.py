@@ -21,7 +21,6 @@ class Snake_UCS:
             visited_cells.append(current)
             if current == goal:
                 break
-
             for next in [(current[0], current[1] + 1), (current[0], current[1] - 1),
                          (current[0] + 1, current[1]), (current[0] - 1, current[1])]:
                 new_cost = cost_so_far[current] + 1

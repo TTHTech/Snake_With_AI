@@ -3,14 +3,10 @@ from queue import PriorityQueue
 
 cell_size = 20
 cell_number = 40
-
 class Snake_AStar:
 
     def heuristic(a, b):
-        # Hàm heuristic tính khoảng cách Manhattan
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
-
-
     def a_star(snake, fruit, obstacles):
         start = tuple(snake.body[0])
         goal = tuple(fruit.pos)
@@ -27,7 +23,6 @@ class Snake_AStar:
             visited_cells.append(current)
             if current == goal:
                 break
-
             for next in [(current[0], current[1] + 1), (current[0], current[1] - 1), (current[0] + 1, current[1]), (current[0] - 1, current[1])]:
                 if next in obstacles_set or next in map(tuple, snake.body):
                     continue

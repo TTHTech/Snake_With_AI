@@ -9,10 +9,16 @@ import Snake_Greedy
 import Snake_DFS
 # Initialize pygame and the screen
 import Snake_BFS
+import os
+import time
 
+
+os.environ['SDL_VIDEO_CENTERED'] = '1'
 current_mode = 'manual'
-current_level = 'not'
+current_level = 'easy'
 snake_speed = 50
+snake_time = 0
+snake_run = -1
 pygame.init()
 cell_size = 20
 cell_number = 40
@@ -20,9 +26,29 @@ SCREEN = pygame.display.set_mode((cell_size * cell_number, cell_size * cell_numb
 pygame.display.set_caption("Snake")
 BG = pygame.image.load("assets/BackGround_s1.png")
 BG = pygame.transform.scale(BG, (cell_size * cell_number, cell_size * cell_number))
+
+ov = pygame.image.load("assets/o.png")
+ov = pygame.transform.scale(ov, (cell_size * cell_number, cell_size * cell_number))
+
+se = pygame.image.load("assets/settin.jpg_large ")
+se = pygame.transform.scale(se, (cell_size * cell_number, cell_size * cell_number))
+
+lev = pygame.image.load("assets/levv.jpg")
+lev = pygame.transform.scale(lev, (cell_size * cell_number, cell_size * cell_number))
+
+pau = pygame.image.load("assets/paus.jpg")
+pau = pygame.transform.scale(pau, (cell_size * cell_number, cell_size * cell_number))
+
+spe = pygame.image.load("assets/speed.png")
+spe = pygame.transform.scale(spe, (cell_size * cell_number, cell_size * cell_number))
+
+bav = pygame.image.load("assets/bav.jpg")
+bav = pygame.transform.scale(bav, (cell_size * cell_number, cell_size * cell_number))
+
+ag = pygame.image.load("assets/ag.jpg")
+ag = pygame.transform.scale(ag, (cell_size * cell_number, cell_size * cell_number))
 font = "assets/font.ttf"
 n_obstacles = 0
-
 
 def get_font(size):
     return pygame.font.Font(font, size)
@@ -68,7 +94,6 @@ def play():
         screen.fill((175, 215, 70))
         main_game.draw_board_with_border()
         main_game.draw_elements()
-
         pygame.display.update()
         clock.tick(60)
 
@@ -79,11 +104,16 @@ def bfs_option():
     current_mode = 'BFS'
     global n_obstacles
     global snake_speed
+    global snake_time
+    global snake_run
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
     main_game = MAIN(n_obstacles)
     path_to_fruit_view0 = []
     sk = int(0)
+    block = int(0)
+    start_time = time.time()
     while True:
+        snake_run += 1
         # Cập nhật lời gọi hàm bfs để bao gồm các chướng ngại vật
         path_to_fruit_view, path_to_fruit = Snake_BFS.Snake_BFS.bfs(main_game.snake, main_game.fruit,
                                                                     main_game.obstacles)
@@ -92,7 +122,8 @@ def bfs_option():
         if sk == (len(main_game.snake.body) - 3):
             path_to_fruit_view0 = path_to_fruit_view
             sk += 1
-        fruit_view(path_to_fruit_view0)
+        fruit_view(path_to_fruit_view)
+        block += len(path_to_fruit_view)
         # Xử lý sự kiện
         if handle_events(main_game):
             break
@@ -101,6 +132,13 @@ def bfs_option():
         screen.fill((175, 215, 70))
         main_game.draw_board_with_border()
         main_game.draw_elements()
+        draw_block(len(path_to_fruit_view0))
+        draw_block_promax(block)
+        end_time = time.time()
+        total_time = end_time - start_time
+        snake_time = "{:.2f}".format(total_time)
+        draw_time("{:.2f}".format(total_time))
+        print("số nút là ", snake_run)
         # pygame.display.update()
         clock.tick(60)
 
@@ -127,11 +165,16 @@ def dfs_option():
     current_mode = 'DFS'
     global n_obstacles
     global snake_speed
+    global snake_time
+    global snake_run
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
     main_game = MAIN(n_obstacles)
+    start_time = time.time()
     path_to_fruit_view0 = []
     sk = int(0)
+    block = int(0)
     while True:
+        snake_run += 1
         # Cập nhật lời gọi hàm dfs để bao gồm các chướng ngại vật
         path_to_fruit, visited = Snake_DFS.Snake_DFS.dfs(main_game.snake, main_game.fruit, main_game.obstacles)
         Snake_DFS.Snake_DFS.follow_path(main_game.snake, path_to_fruit)
@@ -139,7 +182,8 @@ def dfs_option():
         if sk == (len(main_game.snake.body) - 3):
             path_to_fruit_view0 = visited
             sk += 1
-        fruit_view(path_to_fruit_view0)
+        fruit_view(visited)
+        block += len(visited)
         # Xử lý sự kiện tương tự như trong bfs_option
         if handle_events(main_game):
             break
@@ -148,6 +192,12 @@ def dfs_option():
         screen.fill((175, 215, 70))
         main_game.draw_board_with_border()
         main_game.draw_elements()
+        draw_block(len(path_to_fruit_view0))
+        draw_block_promax(block)
+        end_time = time.time()
+        total_time = end_time - start_time
+        snake_time = "{:.2f}".format(total_time)
+        draw_time("{:.2f}".format(total_time))
         # pygame.display.update()
         clock.tick(60)
 
@@ -158,11 +208,16 @@ def ucs_option():
     current_mode = 'UCS'
     global n_obstacles
     global snake_speed
+    global snake_time
+    global snake_run
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
     main_game = MAIN(n_obstacles)  # Sử dụng số lượng chướng ngại vật đã được thiết lập
     sk = int(0)
+    block = int(0)
     path_to_fruit_view0 = []
+    start_time = time.time()
     while True:
+        snake_run += 1
         # Cập nhật lời gọi hàm ucs để bao gồm các chướng ngại vật
         path_to_fruit_view, path_to_fruit = Snake_UCS.Snake_UCS.ucs(main_game.snake, main_game.fruit,
                                                                     main_game.obstacles)
@@ -171,7 +226,8 @@ def ucs_option():
         if sk == (len(main_game.snake.body) - 3):
             path_to_fruit_view0 = path_to_fruit_view
             sk += 1
-        fruit_view(path_to_fruit_view0)
+        fruit_view(path_to_fruit_view)
+        block += len(path_to_fruit_view)
         # Xử lý sự kiện tương tự như trong bfs_option
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -190,6 +246,12 @@ def ucs_option():
         SCREEN.fill((175, 215, 70))
         main_game.draw_board_with_border()
         main_game.draw_elements()
+        draw_block(len(path_to_fruit_view0))
+        draw_block_promax(block)
+        end_time = time.time()
+        total_time = end_time - start_time
+        snake_time = "{:.2f}".format(total_time)
+        draw_time("{:.2f}".format(total_time))
         # pygame.display.update()
         clock.tick(60)
 
@@ -200,11 +262,16 @@ def astar_option():
     current_mode = 'A.STAR'
     global n_obstacles
     global snake_speed
+    global snake_time
+    global snake_run
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
     main_game = MAIN(n_obstacles)
     path_to_fruit_view0 = []
     sk = int(0)
+    block = int(0)
+    start_time = time.time()
     while True:
+        snake_run += 1
         path_to_fruit_view, path_to_fruit = Snake_AStar.Snake_AStar.a_star(main_game.snake, main_game.fruit,
                                                                            main_game.obstacles)
         Snake_AStar.Snake_AStar.follow_path(main_game.snake, path_to_fruit)
@@ -212,7 +279,8 @@ def astar_option():
         if sk == (len(main_game.snake.body) - 3):
             path_to_fruit_view0 = path_to_fruit_view
             sk += 1
-        fruit_view(path_to_fruit_view0)
+        fruit_view(path_to_fruit_view)
+        block += len(path_to_fruit_view)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -228,6 +296,12 @@ def astar_option():
         screen.fill((175, 215, 70))
         main_game.draw_board_with_border()
         main_game.draw_elements()
+        draw_block(len(path_to_fruit_view0))
+        draw_block_promax(block)
+        end_time = time.time()
+        total_time = end_time - start_time
+        snake_time = "{:.2f}".format(total_time)
+        draw_time("{:.2f}".format(total_time))
         # pygame.display.update()
         clock.tick(60)
 
@@ -238,18 +312,24 @@ def greedy_option():
     current_mode = 'BFS'
     global n_obstacles
     global snake_speed
+    global snake_time
+    global snake_run
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
     main_game = MAIN(n_obstacles)
     path_to_fruit_view0 = []
     sk = int(0)
+    block = int(0)
+    start_time = time.time()
     while True:
+        snake_run += 1
         path_to_fruit_view, path_to_fruit = Snake_Greedy.Snake_Greedy.greedy(main_game.snake, main_game.fruit,
                                                                              main_game.obstacles)
         Snake_Greedy.Snake_Greedy.follow_path(main_game.snake, path_to_fruit)
         if sk == (len(main_game.snake.body) - 3):
             path_to_fruit_view0 = path_to_fruit_view
             sk += 1
-        fruit_view(path_to_fruit_view0)
+        fruit_view(path_to_fruit_view)
+        block += len(path_to_fruit_view)
         print(path_to_fruit)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -266,6 +346,11 @@ def greedy_option():
         screen.fill((175, 215, 70))
         main_game.draw_board_with_border()
         main_game.draw_elements()
+        draw_block(len(path_to_fruit_view0))
+        draw_block_promax(block)
+        end_time = time.time()
+        total_time = end_time - start_time
+        draw_time("{:.2f}".format(total_time))
         # pygame.display.update()
         clock.tick(60)
 
@@ -275,11 +360,16 @@ def dijkstra_option():
     current_mode = 'BFS'
     global n_obstacles
     global snake_speed
+    global snake_time
+    global snake_run
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
     main_game = MAIN(n_obstacles)
     path_to_fruit_view0 = []
     sk = int(0)
+    block = int(0)
+    start_time = time.time()
     while True:
+        snake_run += 1
         path_to_fruit_view, path_to_fruit = Snake_Dijikstra.Snake_Dijkstra.dijkstra(main_game.snake, main_game.fruit,
                                                                                     main_game.obstacles)
         Snake_Dijikstra.Snake_Dijkstra.follow_path(main_game.snake, path_to_fruit)
@@ -288,7 +378,8 @@ def dijkstra_option():
         if sk == (len(main_game.snake.body) - 3):
             path_to_fruit_view0 = path_to_fruit_view
             sk += 1
-        fruit_view(path_to_fruit_view0)
+        fruit_view(path_to_fruit_view)
+        block += len(path_to_fruit_view)
         # fruit_run_view( path_to_fruit)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -305,6 +396,12 @@ def dijkstra_option():
         screen.fill((175, 215, 70))
         main_game.draw_board_with_border()
         main_game.draw_elements()
+        draw_block(len(path_to_fruit_view0))
+        draw_block_promax(block)
+        end_time = time.time()
+        total_time = end_time - start_time
+        snake_time = "{:.2f}".format(total_time)
+        draw_time("{:.2f}".format(total_time))
         # pygame.display.update()
         clock.tick(60)
 
@@ -314,12 +411,17 @@ def hillclimbing_option():
     current_mode = 'BFS'
     global n_obstacles
     global snake_speed
+    global snake_time
+    global snake_run
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
     print("Hill Climbing Option Selected")
     main_game = MAIN(n_obstacles)
     path_to_fruit_view0 = []
     sk = int(0)
+    block = int(0)
+    start_time = time.time()
     while True:
+        snake_run += 1
         path_to_fruit_view, path_to_fruit = Snake_HillClimbing.Snake_HillClimbing.hill_climbing(main_game.snake,
                                                                                                 main_game.fruit,
                                                                                                 main_game.obstacles)
@@ -328,7 +430,8 @@ def hillclimbing_option():
         if sk == (len(main_game.snake.body) - 3):
             path_to_fruit_view0 = path_to_fruit_view
             sk += 1
-        fruit_view(path_to_fruit_view0)
+        fruit_view(path_to_fruit_view)
+        block += len(path_to_fruit_view)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -344,6 +447,12 @@ def hillclimbing_option():
         screen.fill((175, 215, 70))
         main_game.draw_board_with_border()
         main_game.draw_elements()
+        draw_block(len(path_to_fruit_view0))
+        draw_block_promax(block)
+        end_time = time.time()
+        total_time = end_time - start_time
+        snake_time = "{:.2f}".format(total_time)
+        draw_time("{:.2f}".format(total_time))
         # pygame.display.update()
         clock.tick(60)
 
@@ -358,7 +467,48 @@ option_functions = {
     "DIJKSTRA": dijkstra_option,
     "HCB": hillclimbing_option,
 }
+def draw_block(block):
+    block_text = str(block)
+    block_surface = game_font.render(block_text, True, (56, 74, 12))
+    block_x = int(cell_size * cell_number - 60)
+    block_y = int(cell_size * cell_number - 40 - 2 * cell_size)
+    block_rect = block_surface.get_rect(center=(block_x, block_y))
+    apple_rect = apple.get_rect(midright=(block_rect.left, block_rect.centery))
+    bg_rect = pygame.Rect(apple_rect.left, apple_rect.top, apple_rect.width + block_rect.width + 6,
+                          apple_rect.height)
 
+    pygame.draw.rect(screen, (167, 209, 61), bg_rect)
+    screen.blit(block_surface, block_rect)
+    screen.blit(apple, apple_rect)
+    pygame.draw.rect(screen, (56, 74, 12), bg_rect, 2)
+def draw_block_promax(block):
+    block_text = str(block)
+    block_surface = game_font.render(block_text, True, (56, 74, 12))
+    block_x = int(cell_size * cell_number - 60)
+    block_y = int(cell_size * cell_number - 40 - 6 * cell_size)
+    block_rect = block_surface.get_rect(center=(block_x, block_y))
+    apple_rect = apple.get_rect(midright=(block_rect.left, block_rect.centery))
+    bg_rect = pygame.Rect(apple_rect.left, apple_rect.top, apple_rect.width + block_rect.width + 6,
+                          apple_rect.height)
+
+    pygame.draw.rect(screen, (167, 209, 61), bg_rect)
+    screen.blit(block_surface, block_rect)
+    screen.blit(apple, apple_rect)
+    pygame.draw.rect(screen, (56, 74, 12), bg_rect, 2)
+def draw_time(time):
+    block_text = str(time)
+    block_surface = game_font.render(block_text, True, (56, 74, 12))
+    block_x = int(cell_size * cell_number - 60)
+    block_y = int(cell_size * cell_number - 40 - 4 * cell_size)
+    block_rect = block_surface.get_rect(center=(block_x, block_y))
+    apple_rect = apple.get_rect(midright=(block_rect.left, block_rect.centery))
+    bg_rect = pygame.Rect(apple_rect.left, apple_rect.top, apple_rect.width + block_rect.width + 6,
+                          apple_rect.height)
+
+    pygame.draw.rect(screen, (167, 209, 61), bg_rect)
+    screen.blit(block_surface, block_rect)
+    screen.blit(apple, apple_rect)
+    pygame.draw.rect(screen, (56, 74, 12), bg_rect, 2)
 
 def fruit_view(path_to_fruit_view):
     for coord in path_to_fruit_view:
@@ -377,7 +527,7 @@ def fruit_run_view(path_to_fruit_view):
 
 
 def options():
-    options_bg = pygame.image.load("assets/BackGround_s1.png")
+    options_bg = pygame.image.load("assets/ago.png")
     options_bg = pygame.transform.scale(options_bg, (cell_size * cell_number, cell_size * cell_number))
     button_width = 200
     button_height = 50
@@ -401,7 +551,7 @@ def options():
         button_image = pygame.image.load(option_image)
         buttons_left.append(Button(image=button_image, pos=(left_column_x, button_pos_y),
                                    text_input=option_text, font=get_font(35), base_color="yellow",
-                                   hovering_color="white"))
+                                   hovering_color="red"))
 
     # Tạo các nút cho cột bên phải
     buttons_right = []
@@ -414,7 +564,7 @@ def options():
         button_image = pygame.image.load(option_image)
         buttons_right.append(Button(image=button_image, pos=(right_column_x, button_pos_y),
                                     text_input=option_text, font=get_font(35), base_color="yellow",
-                                    hovering_color="white"))
+                                    hovering_color="red"))
 
     # Gộp các nút từ cả hai cột vào một danh sách duy nhất để xử lý sự kiện
     buttons = buttons_left + buttons_right
@@ -423,11 +573,11 @@ def options():
     back_button_image = pygame.image.load("assets/button6.png")
     button_pos_y += button_height + button_spacing
     buttons.append(Button(image=back_button_image, pos=(600, button_pos_y),
-                          text_input="BACK", font=get_font(35), base_color="yellow", hovering_color="white"))
+                          text_input="BACK", font=get_font(35), base_color="yellow", hovering_color="red"))
 
     while True:
         OPTIONS_MOUSE_POS = pygame.mouse.get_pos()
-        SCREEN.blit(options_bg, (0, 0))
+        SCREEN.blit(ag, (0, 0))
 
         for button in buttons:
             button.changeColor(OPTIONS_MOUSE_POS)
@@ -465,10 +615,10 @@ def speed_setting():
 
     BACK_BUTTON = Button(image=pygame.image.load("assets/button6.png"),
                          pos=(SCREEN.get_width() // 2, SCREEN.get_height() // 2 + 40),
-                         text_input="Back", font=get_font(40), base_color="yellow", hovering_color="White")
+                         text_input="Back", font=get_font(40), base_color="yellow", hovering_color="red")
 
     while speed_setting_running:
-        SCREEN.fill((0, 0, 0))  # Đặt màu nền
+        SCREEN.blit(spe, (0, 0))  # Đặt màu nền
         SPEED_SETTINGS_MOUSE_POS = pygame.mouse.get_pos()
 
         BACK_BUTTON.changeColor(SPEED_SETTINGS_MOUSE_POS)
@@ -505,16 +655,16 @@ def speed_setting():
 def settings():
     setting_running = True
     while setting_running:
-        SCREEN.fill((0, 0, 0))
+        SCREEN.blit(se, (0, 0))
         SETTINGS_MOUSE_POS = pygame.mouse.get_pos()
 
         # Tạo các nút cho cài đặt
         SETTING_1_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(430, 250),
-                                  text_input="Speed", font=get_font(40), base_color="yellow", hovering_color="White")
+                                  text_input="Speed", font=get_font(40), base_color="yellow", hovering_color="red")
         SETTING_2_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(430, 400),
-                                  text_input="Level", font=get_font(40), base_color="yellow", hovering_color="White")
+                                  text_input="Level", font=get_font(40), base_color="yellow", hovering_color="red")
         BACK_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(430, 550),
-                             text_input="Back", font=get_font(40), base_color="yellow", hovering_color="White")
+                             text_input="Back", font=get_font(40), base_color="yellow", hovering_color="red")
 
         for button in [SETTING_1_BUTTON, SETTING_2_BUTTON, BACK_BUTTON]:
             button.changeColor(SETTINGS_MOUSE_POS)
@@ -537,10 +687,8 @@ def settings():
 
 def new_game():
     global n_obstacles, snake_speed
-    if current_level == 'not':
+    if current_level == 'easy':
         n_obstacles = 0
-    elif current_level == 'easy':
-        n_obstacles = 10
     elif current_level == 'medium':
         n_obstacles = 50
     elif current_level == 'hard':
@@ -570,18 +718,18 @@ def level_menu():
     global n_obstacles, current_level
     level_running = True
     while level_running:
-        SCREEN.fill((0, 0, 0))
+        SCREEN.blit(lev, (0, 0))
         LEVEL_MOUSE_POS = pygame.mouse.get_pos()
 
         # Tạo các nút cho màn hình level
         EASY_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(430, 200),
-                             text_input="Easy", font=get_font(40), base_color="yellow", hovering_color="White")
+                             text_input="Easy", font=get_font(40), base_color="yellow", hovering_color="red")
         MEDIUM_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(430, 350),
-                               text_input="Medium", font=get_font(40), base_color="yellow", hovering_color="White")
+                               text_input="Medium", font=get_font(40), base_color="yellow", hovering_color="red")
         HARD_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(430, 500),
-                             text_input="Hard", font=get_font(40), base_color="yellow", hovering_color="White")
+                             text_input="Hard", font=get_font(40), base_color="yellow", hovering_color="red")
         BACK_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(430, 650),
-                             text_input="Back", font=get_font(40), base_color="yellow", hovering_color="White")
+                             text_input="Back", font=get_font(40), base_color="yellow", hovering_color="red")
 
         for button in [EASY_BUTTON, MEDIUM_BUTTON, HARD_BUTTON, BACK_BUTTON]:
             button.changeColor(LEVEL_MOUSE_POS)
@@ -593,7 +741,7 @@ def level_menu():
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if EASY_BUTTON.checkForInput(LEVEL_MOUSE_POS):
-                    n_obstacles = 20
+                    n_obstacles = 0
                     current_level = 'easy'
                     break
                 elif MEDIUM_BUTTON.checkForInput(LEVEL_MOUSE_POS):
@@ -617,20 +765,20 @@ def pause_menu():
     paused = True
 
     while paused:
-        SCREEN.fill((0, 0, 0))
+        SCREEN.blit(pau, (0, 0))
         PAUSE_MOUSE_POS = pygame.mouse.get_pos()
 
         PAUSE_TEXT = get_font(70).render("Paused", True, "yellow")
         PAUSE_RECT = PAUSE_TEXT.get_rect(center=(430, 100))
 
         CONTINUE_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(430, 250),
-                                 text_input="Continue", font=get_font(40), base_color="yellow", hovering_color="White")
+                                 text_input="Continue", font=get_font(40), base_color="yellow", hovering_color="red")
         NEW_GAME_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(430, 400),
-                                 text_input="New Game", font=get_font(40), base_color="yellow", hovering_color="White")
+                                 text_input="New Game", font=get_font(40), base_color="yellow", hovering_color="red")
         OPTIONS_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(430, 550),
-                                text_input="Setting", font=get_font(40), base_color="yellow", hovering_color="White")
+                                text_input="Setting", font=get_font(40), base_color="yellow", hovering_color="red")
         QUIT_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(430, 700),
-                             text_input="Quit", font=get_font(40), base_color="yellow", hovering_color="White")
+                             text_input="Quit", font=get_font(40), base_color="yellow", hovering_color="red")
 
         SCREEN.blit(PAUSE_TEXT, PAUSE_RECT)
 
@@ -662,18 +810,18 @@ def pause_menu():
 
 def game_over():
     while True:
-        SCREEN.fill((0, 0, 0))
+        SCREEN.blit(ov, (0, 0))
         GAME_OVER_MOUSE_POS = pygame.mouse.get_pos()
 
         GAME_OVER_TEXT = get_font(70).render("Game Over", True, "Red")
         GAME_OVER_RECT = GAME_OVER_TEXT.get_rect(center=(430, 100))
 
         NEW_GAME_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(430, 270),
-                                 text_input="New Game", font=get_font(40), base_color="yellow", hovering_color="White")
+                                 text_input="New Game", font=get_font(40), base_color="yellow", hovering_color="red")
         OPTIONS_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(430, 420),
-                                text_input="Setting", font=get_font(40), base_color="yellow", hovering_color="White")
+                                text_input="Setting", font=get_font(40), base_color="yellow", hovering_color="red")
         QUIT_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(430, 570),
-                             text_input="Quit", font=get_font(40), base_color="yellow", hovering_color="White")
+                             text_input="Quit", font=get_font(40), base_color="yellow", hovering_color="red")
 
         SCREEN.blit(GAME_OVER_TEXT, GAME_OVER_RECT)
 
@@ -691,7 +839,7 @@ def game_over():
                 elif OPTIONS_BUTTON.checkForInput(GAME_OVER_MOUSE_POS):
                     settings()
                 elif QUIT_BUTTON.checkForInput(GAME_OVER_MOUSE_POS):
-                    main_menu()  # Gọi hàm main_menu() thay vì trả về "main_menu"
+                    main_menu()
                     return
 
         pygame.display.update()
@@ -701,18 +849,19 @@ def main_menu():
     global current_mode, current_level
     current_mode == 'manual'
     while True:
-        SCREEN.blit(BG, (0, 0))
+        # SCREEN.blit(BG, (0, 0))
+        SCREEN.blit(bav, (0, 0))
         MENU_MOUSE_POS = pygame.mouse.get_pos()
 
         MENU_TEXT = get_font(70).render("S N A K E", True, "yellow")
         MENU_RECT = MENU_TEXT.get_rect(center=(430, 100))
 
         PLAY_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(430, 270),
-                             text_input="PLAY", font=get_font(75), base_color="yellow", hovering_color="White")
+                             text_input="PLAY", font=get_font(75), base_color="yellow", hovering_color="red")
         OPTIONS_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(430, 420),
-                                text_input="AI", font=get_font(75), base_color="yellow", hovering_color="White")
+                                text_input="AI", font=get_font(75), base_color="yellow", hovering_color="red")
         QUIT_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(430, 570),
-                             text_input="QUIT", font=get_font(75), base_color="yellow", hovering_color="White")
+                             text_input="QUIT", font=get_font(75), base_color="yellow", hovering_color="red")
 
         SCREEN.blit(MENU_TEXT, MENU_RECT)
 
