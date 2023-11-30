@@ -15,7 +15,7 @@ class Snake_Dijkstra:
         came_from = {start: None}
         cost_so_far = {start: 0}
 
-        # Chuyển danh sách các chướng ngại vật thành tập hợp (set) các tuple để dễ dàng kiểm tra
+
         obstacles_set = {tuple(obstacle.pos) for obstacle in obstacles}
         visited_cells = []
 

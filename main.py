@@ -124,7 +124,7 @@ def bfs_option():
         if sk == (len(main_game.snake.body) - 3):
             path_to_fruit_view0 = path_to_fruit_view
             sk += 1
-        fruit_view(path_to_fruit_view)
+        fruit_view(path_to_fruit_view0)
         block += len(path_to_fruit_view)
         # Xử lý sự kiện
         if handle_events(main_game):
@@ -143,7 +143,7 @@ def bfs_option():
         print("số nút là ", snake_run)
         save_to_file()
         # pygame.display.update()
-        clock.tick(60)
+        clock.tick(144)
 
 
 def handle_events(main_game):
@@ -179,20 +179,20 @@ def dfs_option():
     block = int(0)
     while True:
         snake_run += 1
-        # Cập nhật lời gọi hàm dfs để bao gồm các chướng ngại vật
+
         path_to_fruit, visited = Snake_DFS.Snake_DFS.dfs(main_game.snake, main_game.fruit, main_game.obstacles)
         Snake_DFS.Snake_DFS.follow_path(main_game.snake, path_to_fruit)
         print(path_to_fruit)
         if sk == (len(main_game.snake.body) - 3):
             path_to_fruit_view0 = visited
             sk += 1
-        fruit_view(visited)
+        fruit_view(path_to_fruit_view0)
         block += len(visited)
-        # Xử lý sự kiện tương tự như trong bfs_option
+
         if handle_events(main_game):
             break
 
-        # Cập nhật và vẽ game giống như bfs_option
+
         screen.fill((175, 215, 70))
         main_game.draw_board_with_border()
         main_game.draw_elements()
@@ -204,7 +204,8 @@ def dfs_option():
         draw_time("{:.2f}".format(total_time))
         save_to_file()
         # pygame.display.update()
-        clock.tick(60)
+        clock.tick(144)
+
 
 
 def ucs_option():
@@ -217,14 +218,13 @@ def ucs_option():
     global snake_run
     global block
     pygame.time.set_timer(SCREEN_UPDATE, snake_speed)
-    main_game = MAIN(n_obstacles)  # Sử dụng số lượng chướng ngại vật đã được thiết lập
+    main_game = MAIN(n_obstacles)
     sk = int(0)
     block = int(0)
     path_to_fruit_view0 = []
     start_time = time.time()
     while True:
         snake_run += 1
-        # Cập nhật lời gọi hàm ucs để bao gồm các chướng ngại vật
         path_to_fruit_view, path_to_fruit = Snake_UCS.Snake_UCS.ucs(main_game.snake, main_game.fruit,
                                                                     main_game.obstacles)
         Snake_UCS.Snake_UCS.follow_path(main_game.snake, path_to_fruit)
@@ -232,23 +232,23 @@ def ucs_option():
         if sk == (len(main_game.snake.body) - 3):
             path_to_fruit_view0 = path_to_fruit_view
             sk += 1
-        fruit_view(path_to_fruit_view)
+        fruit_view(path_to_fruit_view0)
         block += len(path_to_fruit_view)
-        # Xử lý sự kiện tương tự như trong bfs_option
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             if event.type == SCREEN_UPDATE:
                 main_game.update()
-            if not main_game.GameOver:  # Check for input only if the game is not over
+            if not main_game.GameOver:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE or event.key == pygame.K_SPACE:
                         pause_menu()
             if main_game.GameOver:
                 game_over()
 
-        # Cập nhật và vẽ game giống như bfs_option
+
         SCREEN.fill((175, 215, 70))
         main_game.draw_board_with_border()
         main_game.draw_elements()
@@ -260,7 +260,7 @@ def ucs_option():
         draw_time("{:.2f}".format(total_time))
         save_to_file()
         # pygame.display.update()
-        clock.tick(60)
+        clock.tick(144)
 
 
 def astar_option():
@@ -287,7 +287,7 @@ def astar_option():
         if sk == (len(main_game.snake.body) - 3):
             path_to_fruit_view0 = path_to_fruit_view
             sk += 1
-        fruit_view(path_to_fruit_view)
+        fruit_view(path_to_fruit_view0)
         block += len(path_to_fruit_view)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -295,7 +295,7 @@ def astar_option():
                 sys.exit()
             if event.type == SCREEN_UPDATE:
                 main_game.update()
-            if not main_game.GameOver:  # Check for input only if the game is not over
+            if not main_game.GameOver:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE or event.key == pygame.K_SPACE:
                         pause_menu()
@@ -312,7 +312,7 @@ def astar_option():
         draw_time("{:.2f}".format(total_time))
         save_to_file()
         # pygame.display.update()
-        clock.tick(60)
+        clock.tick(144)
 
 
 def greedy_option():
@@ -338,7 +338,7 @@ def greedy_option():
         if sk == (len(main_game.snake.body) - 3):
             path_to_fruit_view0 = path_to_fruit_view
             sk += 1
-        fruit_view(path_to_fruit_view)
+        fruit_view(path_to_fruit_view0)
         block += len(path_to_fruit_view)
         print(path_to_fruit)
         for event in pygame.event.get():
@@ -360,10 +360,11 @@ def greedy_option():
         draw_block_promax(block)
         end_time = time.time()
         total_time = end_time - start_time
+        snake_time = "{:.2f}".format(total_time)
         draw_time("{:.2f}".format(total_time))
         save_to_file()
         # pygame.display.update()
-        clock.tick(60)
+        clock.tick(144)
 
 
 def dijkstra_option():
@@ -390,7 +391,7 @@ def dijkstra_option():
         if sk == (len(main_game.snake.body) - 3):
             path_to_fruit_view0 = path_to_fruit_view
             sk += 1
-        fruit_view(path_to_fruit_view)
+        fruit_view(path_to_fruit_view0)
         block += len(path_to_fruit_view)
         # fruit_run_view( path_to_fruit)
         for event in pygame.event.get():
@@ -416,7 +417,7 @@ def dijkstra_option():
         draw_time("{:.2f}".format(total_time))
         save_to_file()
         # pygame.display.update()
-        clock.tick(60)
+        clock.tick(144)
 
 
 def hillclimbing_option():
@@ -444,7 +445,7 @@ def hillclimbing_option():
         if sk == (len(main_game.snake.body) - 3):
             path_to_fruit_view0 = path_to_fruit_view
             sk += 1
-        fruit_view(path_to_fruit_view)
+        fruit_view(path_to_fruit_view0)
         block += len(path_to_fruit_view)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -469,7 +470,7 @@ def hillclimbing_option():
         draw_time("{:.2f}".format(total_time))
         save_to_file()
         # pygame.display.update()
-        clock.tick(60)
+        clock.tick(144)
 
 
 # Mapping of options to functions
@@ -546,17 +547,15 @@ def options():
     options_bg = pygame.transform.scale(options_bg, (cell_size * cell_number, cell_size * cell_number))
     button_width = 200
     button_height = 50
-    button_spacing = 90  # Khoảng cách giữa các nút
+    button_spacing = 90
 
-    # Tính toán khoảng cách từ mép trên của màn hình để nút đầu tiên có thể căn giữa
-    total_buttons_height = (button_height * 4) + (button_spacing * 3)  # Cho 4 nút với 3 khoảng trống giữa
+    total_buttons_height = (button_height * 4) + (button_spacing * 3)
     start_y = (SCREEN.get_height() - total_buttons_height) // 2
 
-    # Xác định vị trí cột của 2 hàng dọc
-    left_column_x = SCREEN.get_width() // 4  # Cột bên trái ở 1/4 chiều rộng màn hình
-    right_column_x = (SCREEN.get_width() * 3) // 4  # Cột bên phải ở 3/4 chiều rộng màn hình
+    left_column_x = SCREEN.get_width() // 4
+    right_column_x = (SCREEN.get_width() * 3) // 4
 
-    # Tạo các nút cho cột bên trái
+
     buttons_left = []
     option_texts_left = ["BFS", "DFS", "UCS", "A.STAR"]
     option_images_left = ["assets/button6.png"] * 4
@@ -568,12 +567,10 @@ def options():
                                    text_input=option_text, font=get_font(35), base_color="yellow",
                                    hovering_color="red"))
 
-    # Tạo các nút cho cột bên phải
     buttons_right = []
     option_texts_right = ["GREEDY", "DIJKSTRA", "HCB"]
     option_images_right = ["assets/button6.png"] * 3
 
-    # Chỉ cần dùng start_y lại vì nó giữ nguyên vị trí y ban đầu
     for i, (option_text, option_image) in enumerate(zip(option_texts_right, option_images_right)):
         button_pos_y = start_y + i * (button_height + button_spacing)
         button_image = pygame.image.load(option_image)
@@ -581,10 +578,8 @@ def options():
                                     text_input=option_text, font=get_font(35), base_color="yellow",
                                     hovering_color="red"))
 
-    # Gộp các nút từ cả hai cột vào một danh sách duy nhất để xử lý sự kiện
     buttons = buttons_left + buttons_right
 
-    # Assume you have a 'BACK' button image as well
     back_button_image = pygame.image.load("assets/button6.png")
     button_pos_y += button_height + button_spacing
     buttons.append(Button(image=back_button_image, pos=(600, button_pos_y),
@@ -605,18 +600,16 @@ def options():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 for index, button in enumerate(buttons):
                     if button.checkForInput(OPTIONS_MOUSE_POS):
-                        # Check if index is in the range of the left buttons
                         if index < len(buttons_left):
                             option_selected = option_texts_left[index]
-                            option_functions[option_selected]()  # Call the corresponding function
-                        # Otherwise, it must be in the right buttons
+                            option_functions[option_selected]()
                         elif index < len(buttons_left) + len(buttons_right):
                             # Adjust index for the right column
                             right_index = index - len(buttons_left)
                             option_selected = option_texts_right[right_index]
-                            option_functions[option_selected]()  # Call the corresponding function
-                        elif button == buttons[-1]:  # Assuming 'BACK' button is the last one added
-                            main_menu()  # Go back to the main menu
+                            option_functions[option_selected]()
+                        elif button == buttons[-1]:
+                            main_menu()
                             return
         pygame.display.update()
 

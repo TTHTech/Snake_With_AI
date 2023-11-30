@@ -47,7 +47,7 @@ class SNAKE:
         self.body_bl = pygame.transform.scale(self.body_bl, (20, 20))
         # self.crunch_sound = pygame.mixer.Sound('Sound/crunch.wav')
 
-    # tổng cộng có 14 hình khác nhau
+
     def draw_snake(self):
         self.update_head_graphics()
         self.update_tail_graphics()
@@ -80,7 +80,7 @@ class SNAKE:
                         screen.blit(self.body_br, block_rect)
 
     def update_head_graphics(self):
-        # 1[4,10] body block at start - [5,10] Head pos at start = [-1,0] First block is to the left of the head
+
         head_relation = self.body[1] - self.body[0]
         if head_relation == Vector2(1, 0):
             self.head = self.head_left
@@ -92,7 +92,7 @@ class SNAKE:
             self.head = self.head_down
 
     def update_tail_graphics(self):
-        # phần tử cuối cùng và phần tử đứng trước phần tử cuối cùng
+
         tail_relation = self.body[-2] - self.body[-1]
         if tail_relation == Vector2(1, 0):
             self.tail = self.tail_left
@@ -106,9 +106,9 @@ class SNAKE:
     def move_snake(self):
         if self.new_block == True:
             body_copy = self.body[:]
-            body_copy.insert(0, body_copy[0] + self.direction)  # thêm 1 vị trí mới ở phía trước để mở rộng con rắn
+            body_copy.insert(0, body_copy[0] + self.direction)
             self.body = body_copy[:]
-            self.new_block = False  # đặt block mới là fail nếu không nó sẽ kéo dài mãi
+            self.new_block = False
         else:
             body_copy = self.body[:-1]
             body_copy.insert(0, body_copy[0] + self.direction)
@@ -139,9 +139,9 @@ class FRUIT:
                 break
     def draw_fruit(self):
         fruit_rect = pygame.Rect(int(self.pos.x * cell_size), int(self.pos.y * cell_size), cell_size, cell_size)
-        screen.blit(apple, fruit_rect)  # vẽ 1 quả táo lên hình chữ nhật
+        screen.blit(apple, fruit_rect)  #
 
-    # pygame.draw.rect(screen,(126,166,114),fruit_rect) này vẽ hình chữ nhật
+
 
 
 
@@ -159,6 +159,9 @@ class MAIN:
         self.GamePause = False
         self.path = []
 
+        self.background_image = pygame.image.load('assets/Back.png').convert_alpha()
+        self.background_image = pygame.transform.scale(self.background_image, (800, cell_number * cell_size))
+
     def reset_obstacles(self):
         self.obstacles = [OBSTACLE() for _ in range(self.n_obstacles)]
     def update_occupied_positions(self):
@@ -167,13 +170,13 @@ class MAIN:
             self.occupied.add(tuple(obstacle.pos))
 
     def randomize_positions(self):
-        # Randomize vị trí cho thức ăn
+
         while True:
             self.fruit.randomize()
             if tuple(self.fruit.pos) not in self.occupied:
                 break
 
-        # Randomize vị trí cho các chướng ngại vật
+
         for obstacle in self.obstacles:
             while True:
                 obstacle.randomize()
@@ -184,13 +187,14 @@ class MAIN:
         self.snake.move_snake()
         self.check_collision()
         self.check_fail()
-        self.update_occupied_positions()  # Cập nhật vị trí bị chiếm dụng
-        if self.GameOver:  # Chỉ cập nhật khi game không kết thúc
+        self.update_occupied_positions()
+        if self.GameOver:
             self.randomize_positions()
         if any(obstacle.pos == self.snake.body[0] for obstacle in self.obstacles):
             self.game_over()
     def draw_elements(self):
-        self.draw_grass()
+        screen.blit(self.background_image, (0, 0))
+        # self.draw_grass()
         self.fruit.draw_fruit()
         self.snake.draw_snake()
         for obstacle in self.obstacles:
@@ -208,13 +212,11 @@ class MAIN:
         #         self.fruit.randomize()
 
     def check_fail(self):
-        # kiểm tra xem con rắn có ở ngoài màn hình không
-        # kiểm tra trái phải và trên dưới vì nó là 1 vector nên không thể so saánh với 1 số được
+
         if not 0 <= self.snake.body[0].x < cell_number or not 0 <= self.snake.body[0].y < cell_number:
-            self.game_over()  # game sẽ kết thúc và bắt đầu lại
+            self.game_over()
             self.GameOver = True
-        # kiểm tra xem đầu con rắn có va chạm với bắt kì vị trí nào cuủa nó không
-        # lấy tất cả các phần tử trừ đầu ra snake.body[1:]
+
         for block in self.snake.body[1:]:
             if len(self.snake.body) == 3 and self.snake.body[0] == Vector2(5, 10) and self.snake.body[1] == Vector2(5,10) and self.snake.body[2] == Vector2(4, 10):
                 self.snake.reset()
@@ -229,8 +231,8 @@ class MAIN:
 
     def draw_grass(self):
         grass_color = (167, 209, 61)
-        grass_cell_size = 20  # Đặt kích thước ô cỏ nhỏ hơn so với cell_size gốc
-        grass_cell_number = cell_number * (cell_size // grass_cell_size)  # Tính số lượng ô cỏ dựa trên kích thước mới
+        grass_cell_size = 20
+        grass_cell_number = cell_number * (cell_size // grass_cell_size)
 
         for row in range(grass_cell_number):
             for col in range(grass_cell_number):
@@ -259,29 +261,25 @@ class MAIN:
     def draw_board_with_border(self):
         dark_green = (167, 227, 93)
         light_green = (196, 237, 100)
-        border_color = (87, 145, 42)  # Màu viền
+        border_color = (87, 145, 42)
 
-        # Vẽ các ô trên bảng
         for row in range(cell_number):
             for col in range(cell_number):
                 x0, y0 = col * cell_size, row * cell_size
                 color = dark_green if (row + col) % 2 == 0 else light_green
                 pygame.draw.rect(screen, color, pygame.Rect(x0, y0, cell_size, cell_size))
-        # for x, y in integer_visited:
-        #     x_pixel, y_pixel = x * cell_size, y * cell_size
-        #     pygame.draw.circle(screen, (0, 0, 255), (x_pixel + cell_size // 2, y_pixel + cell_size // 2), cell_size // 2)
-        # Vẽ viền xung quanh bảng
         pygame.draw.rect(screen, border_color, pygame.Rect(0, 0, cell_number * cell_size, cell_number * cell_size), 10)
 
 class OBSTACLE:
     def __init__(self):
-        # Tải ảnh chướng ngại vật và điều chỉnh kích thước
-        self.image = pygame.image.load('Graphics/diamond.png').convert_alpha()
+
+        self.image = pygame.image.load('assets/stone.png').convert_alpha()
         self.image = pygame.transform.scale(self.image, (cell_size, cell_size))
+        self.image = pygame.transform.scale(self.image, (20, 20))
         self.randomize()
 
     def draw_obstacle(self):
-        # Vẽ ảnh chướng ngại vật thay vì hình chữ nhật
+
         obstacle_rect = pygame.Rect(int(self.pos.x * cell_size), int(self.pos.y * cell_size), cell_size, cell_size)
         screen.blit(self.image, obstacle_rect)
     def randomize(self):
@@ -301,7 +299,7 @@ cell_size = 20
 cell_number = 40
 screen = pygame.display.set_mode((1200, cell_number * cell_size))
 clock = pygame.time.Clock()
-apple = pygame.image.load('Graphics/apple.png').convert_alpha()
+apple = pygame.image.load('assets/diamond.png').convert_alpha()
 apple = pygame.transform.scale(apple, (20, 20))
 game_font = pygame.font.Font('Font/PoetsenOne-Regular.ttf', 25)
 SCREEN_UPDATE = pygame.USEREVENT

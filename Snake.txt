@@ -1,6 +1,6 @@
-Thuật toán: UCS
+Thuật toán: BFS
 Chế độ hiện tại: easy
-Tốc độ rắn: 30
-Tổng số nút: 356382
-Thời gian chạy chương trình: 15.13
-Số nút(chi phí): 837
+Tốc độ rắn: 50
+Tổng số nút: 258710
+Thời gian chạy chương trình: 16.53
+Số nút(chi phí): 834

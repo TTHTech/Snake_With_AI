@@ -16,7 +16,7 @@ class Snake_HillClimbing:
         max_steps = cell_number * cell_number
         steps = 0
 
-        # Chuyển danh sách các chướng ngại vật thành tập hợp (set) các tuple để dễ dàng kiểm tra
+
         obstacles_set = {tuple(obstacle.pos) for obstacle in obstacles}
         visited_cells = []
 

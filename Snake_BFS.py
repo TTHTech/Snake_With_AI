@@ -8,27 +8,22 @@ class Snake_BFS:
     def bfs(snake, food, obstacles):
         start = tuple(snake.body[0])
         goal = tuple(food.pos)
-
         frontier = Queue()
         frontier.put(start)
         came_from = {start: None}
-
-        # Chuyển danh sách các chướng ngại vật thành tập hợp (set) các tuple để dễ dàng kiểm tra
         obstacles_set = {tuple(obstacle.pos) for obstacle in obstacles}
         visited_cells = []
-
         while not frontier.empty():
             current = frontier.get()
             visited_cells.append(current)
 
             if current == goal:
                 break
-
             for next in [(current[0], current[1] + 1), (current[0], current[1] - 1), (current[0] + 1, current[1]), (current[0] - 1, current[1])]:
                 if next not in came_from:
                     if (0 <= next[0] < cell_number and 0 <= next[1] < cell_number and
                         next not in map(tuple, snake.body) and
-                        next not in obstacles_set):  # Kiểm tra xem next không phải là chướng ngại vật
+                        next not in obstacles_set):
                         frontier.put(next)
                         came_from[next] = current
 
