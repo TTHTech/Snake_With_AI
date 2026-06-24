@@ -5,4 +5,5 @@ __pycache__/
 # File sinh tự động khi chạy
 config.json
 benchmark_results.csv
+benchmark_chart.png
 Sound/bgm.wav

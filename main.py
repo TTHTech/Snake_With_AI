@@ -826,6 +826,43 @@ def draw_toggle(rect, label, mouse, checked):
     return hover
 
 
+def show_benchmark_charts():
+    """Mở cửa sổ matplotlib so sánh các thuật toán + lưu PNG. Lỗi không ảnh hưởng game."""
+    if not benchmark_results:
+        return
+    try:
+        import matplotlib
+        import matplotlib.pyplot as plt
+    except Exception as e:
+        print("matplotlib khong san sang:", e)
+        return
+    rows = benchmark_results
+    labels = [f"{r['algo']}\n{r['level'][:3]}" for r in rows]
+    metrics = [('Score (fruits)', 'score', 'tab:green'),
+               ('Steps survived', 'steps', 'tab:blue'),
+               ('Nodes expanded', 'nodes', 'tab:red'),
+               ('Time (s)', 'time', 'tab:orange')]
+    try:
+        fig, axes = plt.subplots(2, 2, figsize=(12, 7))
+        fig.suptitle('Snake AI - So sanh thuat toan', fontsize=14, fontweight='bold')
+        for ax, (title, key, c) in zip(axes.flat, metrics):
+            vals = [r[key] for r in rows]
+            bars = ax.bar(range(len(rows)), vals, color=c)
+            ax.set_title(title)
+            ax.set_xticks(range(len(rows)))
+            ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=8)
+            ax.grid(axis='y', alpha=0.3)
+            ax.bar_label(bars, fontsize=7, padding=2)
+        fig.tight_layout(rect=[0, 0, 1, 0.96])
+        out = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'benchmark_chart.png')
+        fig.savefig(out, dpi=120)
+        print("Da luu bieu do:", out)
+        plt.show()
+        plt.close(fig)
+    except Exception as e:
+        print("Chart error:", e)
+
+
 def benchmark_report():
     grad = make_gradient((20, 30, 46), (8, 12, 20))
     headers = ['Algo', 'Lvl', 'Spd', 'Score', 'Steps', 'Nodes', 'Time', 'N/Step']
@@ -833,8 +870,9 @@ def benchmark_report():
     row_h = 34
     top = 150
     scroll = 0
-    back_rect = pygame.Rect(440, SCREEN.get_height() - 66, 150, 50)
-    clear_rect = pygame.Rect(210, SCREEN.get_height() - 66, 200, 50)
+    chart_rect = pygame.Rect(110, SCREEN.get_height() - 66, 180, 50)
+    clear_rect = pygame.Rect(310, SCREEN.get_height() - 66, 180, 50)
+    back_rect = pygame.Rect(510, SCREEN.get_height() - 66, 180, 50)
 
     while True:
         SCREEN.blit(grad, (0, 0))
@@ -860,6 +898,7 @@ def benchmark_report():
             s = get_font(28).render("Chua co du lieu - hay chay benchmark!", True, (200, 210, 180))
             SCREEN.blit(s, s.get_rect(center=(SCREEN.get_width() // 2, 320)))
 
+        draw_menu_button(chart_rect, "Chart", MOUSE)
         draw_menu_button(clear_rect, "Clear", MOUSE)
         draw_menu_button(back_rect, "Back", MOUSE)
 
@@ -872,6 +911,8 @@ def benchmark_report():
                     scroll = max(0, scroll - 1)
                 elif event.button == 5:
                     scroll = min(max(0, len(benchmark_results) - visible), scroll + 1)
+                elif chart_rect.collidepoint(MOUSE):
+                    show_benchmark_charts()
                 elif back_rect.collidepoint(MOUSE):
                     return
                 elif clear_rect.collidepoint(MOUSE):
