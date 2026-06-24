@@ -16,6 +16,7 @@ class Snake_DFS:
         visited = set()
 
         obstacles_set = {tuple(obstacle.pos) for obstacle in obstacles}
+        body_set = {tuple(b) for b in snake.body}
 
         while stack:
             current = stack.pop()
@@ -29,7 +30,7 @@ class Snake_DFS:
 
             for next in next_nodes:
                 if next not in visited and next not in obstacles_set:
-                    if 0 <= next[0] < cell_number and 0 <= next[1] < cell_number and next not in map(tuple, snake.body):
+                    if 0 <= next[0] < cell_number and 0 <= next[1] < cell_number and next not in body_set:
                         stack.append(next)
                         came_from[next] = current
 

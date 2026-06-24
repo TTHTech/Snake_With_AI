@@ -12,6 +12,7 @@ class Snake_BFS:
         frontier.put(start)
         came_from = {start: None}
         obstacles_set = {tuple(obstacle.pos) for obstacle in obstacles}
+        body_set = {tuple(b) for b in snake.body}
         visited_cells = []
         while not frontier.empty():
             current = frontier.get()
@@ -22,11 +23,13 @@ class Snake_BFS:
             for next in [(current[0], current[1] + 1), (current[0], current[1] - 1), (current[0] + 1, current[1]), (current[0] - 1, current[1])]:
                 if next not in came_from:
                     if (0 <= next[0] < cell_number and 0 <= next[1] < cell_number and
-                        next not in map(tuple, snake.body) and
+                        next not in body_set and
                         next not in obstacles_set):
                         frontier.put(next)
                         came_from[next] = current
 
+        if current != goal:
+            return visited_cells, []
         path = []
         while current != start:
             if (came_from[current][0] - current[0], came_from[current][1] - current[1]) == (1, 0):

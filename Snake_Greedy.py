@@ -17,6 +17,7 @@ class Snake_Greedy:
         frontier.put((Snake_Greedy.heuristic(start, goal), start))
         came_from = {start: None}
         obstacles_set = {tuple(obstacle.pos) for obstacle in obstacles}
+        body_set = {tuple(b) for b in snake.body}
         visited_cells = []
 
         while not frontier.empty():
@@ -28,12 +29,14 @@ class Snake_Greedy:
 
             for next in [(current[0], current[1] + 1), (current[0], current[1] - 1), (current[0] + 1, current[1]),
                          (current[0] - 1, current[1])]:
-                if 0 <= next[0] < cell_number and 0 <= next[1] < cell_number and next not in map(tuple, snake.body):
+                if 0 <= next[0] < cell_number and 0 <= next[1] < cell_number and next not in body_set:
                     if next not in came_from and next not in obstacles_set:
                         priority = Snake_Greedy.heuristic(next, goal)
                         frontier.put((priority, next))
                         came_from[next] = current
 
+        if current != goal:
+            return visited_cells, []
         path = []
         while current != start:
             if (came_from[current][0] - current[0], came_from[current][1] - current[1]) == (1, 0):

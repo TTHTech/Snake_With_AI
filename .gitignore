@@ -1,0 +1,8 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# File sinh tự động khi chạy
+config.json
+benchmark_results.csv
+Sound/bgm.wav

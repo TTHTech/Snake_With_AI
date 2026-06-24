@@ -1,6 +1,6 @@
-Thuật toán: BFS
+Thuật toán: BIBFS
 Chế độ hiện tại: easy
 Tốc độ rắn: 50
-Tổng số nút: 258710
-Thời gian chạy chương trình: 16.53
-Số nút(chi phí): 834
+Tổng số nút: 5108725
+Thời gian chạy chương trình: 140.97
+Số nút(chi phí): 24615

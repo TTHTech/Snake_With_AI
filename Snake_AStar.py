@@ -17,6 +17,7 @@ class Snake_AStar:
         cost_so_far = {start: 0}
 
         obstacles_set = {tuple(obstacle.pos) for obstacle in obstacles}
+        body_set = {tuple(b) for b in snake.body}
         visited_cells = []
         while not frontier.empty():
             current = frontier.get()[1]
@@ -24,7 +25,7 @@ class Snake_AStar:
             if current == goal:
                 break
             for next in [(current[0], current[1] + 1), (current[0], current[1] - 1), (current[0] + 1, current[1]), (current[0] - 1, current[1])]:
-                if next in obstacles_set or next in map(tuple, snake.body):
+                if next in obstacles_set or next in body_set:
                     continue
 
                 new_cost = cost_so_far[current] + 1
@@ -35,6 +36,8 @@ class Snake_AStar:
                         frontier.put((priority, next))
                         came_from[next] = current
 
+        if current != goal:
+            return visited_cells, []
         path = []
         while current != start:
             if (came_from[current][0] - current[0], came_from[current][1] - current[1]) == (1, 0):

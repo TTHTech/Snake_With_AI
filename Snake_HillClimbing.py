@@ -18,7 +18,11 @@ class Snake_HillClimbing:
 
 
         obstacles_set = {tuple(obstacle.pos) for obstacle in obstacles}
+        body_set = {tuple(b) for b in snake.body}
         visited_cells = []
+
+        def h(cell):
+            return abs(goal[0] - cell[0]) + abs(goal[1] - cell[1])
 
         while current != goal and steps < max_steps:
             neighbors = [
@@ -29,13 +33,17 @@ class Snake_HillClimbing:
             neighbors = [
                 neighbor for neighbor in neighbors
                 if 0 <= neighbor[0] < cell_number and 0 <= neighbor[1] < cell_number
-                   and neighbor not in map(tuple, snake.body) and neighbor not in obstacles_set
+                   and neighbor not in body_set and neighbor not in obstacles_set
             ]
             visited_cells.append(current)
             if not neighbors:
                 break
 
-            next_step = min(neighbors, key=lambda x: abs(goal[0] - x[0]) + abs(goal[1] - x[1]))
+            next_step = min(neighbors, key=h)
+
+            # Hill Climbing chuẩn: dừng khi không có hàng xóm nào tốt hơn (local optimum)
+            if h(next_step) >= h(current):
+                break
 
             if (next_step[0] - current[0], next_step[1] - current[1]) == (1, 0):
                 path.append('RIGHT')

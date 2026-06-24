@@ -17,6 +17,7 @@ class Snake_Dijkstra:
 
 
         obstacles_set = {tuple(obstacle.pos) for obstacle in obstacles}
+        body_set = {tuple(b) for b in snake.body}
         visited_cells = []
 
         while not frontier.empty():
@@ -29,13 +30,14 @@ class Snake_Dijkstra:
                          (current[0] - 1, current[1])]:
                 new_cost = cost_so_far[current] + 1
                 if next not in cost_so_far or new_cost < cost_so_far[next]:
-                    if 0 <= next[0] < cell_number and 0 <= next[1] < cell_number and next not in map(tuple,
-                                                                                                     snake.body) and next not in obstacles_set:
+                    if 0 <= next[0] < cell_number and 0 <= next[1] < cell_number and next not in body_set and next not in obstacles_set:
                         cost_so_far[next] = new_cost
                         priority = new_cost
                         frontier.put((priority, next))
                         came_from[next] = current
 
+        if current != goal:
+            return visited_cells, []
         path = []
         while current != start:
             if (came_from[current][0] - current[0], came_from[current][1] - current[1]) == (1, 0):

@@ -1,6 +1,44 @@
 import pygame, sys, random
 from pygame.math import Vector2
 import Snake_Dijikstra
+import audio
+
+# ===== Hệ thống SKIN cho rắn =====
+# "Classic" = None -> dùng sprite gốc. Các skin khác được vẽ bằng code.
+SKINS = {
+    "Classic": None,
+    "Emerald": {"body": (46, 204, 113), "body2": (33, 160, 90),  "head": (28, 130, 75),  "eye": (255, 255, 255), "pupil": (20, 45, 25)},
+    "Ocean":   {"body": (52, 152, 219), "body2": (39, 118, 175), "head": (31, 97, 141),  "eye": (255, 255, 255), "pupil": (15, 35, 55)},
+    "Lava":    {"body": (231, 96, 50),  "body2": (192, 64, 35),  "head": (150, 45, 30),  "eye": (255, 240, 200), "pupil": (70, 18, 12)},
+    "Grape":   {"body": (155, 89, 182), "body2": (125, 60, 152), "head": (97, 45, 120),  "eye": (255, 255, 255), "pupil": (45, 22, 55)},
+    "Gold":    {"body": (241, 196, 15), "body2": (210, 165, 12), "head": (170, 130, 8),  "eye": (60, 50, 10),    "pupil": (95, 72, 8)},
+    "Shadow":  {"body": (52, 73, 94),   "body2": (40, 56, 72),   "head": (23, 32, 42),   "eye": (0, 255, 200),   "pupil": (8, 45, 38)},
+}
+selected_skin = "Classic"
+
+
+def set_skin(name):
+    global selected_skin
+    if name in SKINS:
+        selected_skin = name
+
+
+# ===== Hệ thống MAP (chủ đề bàn cờ) =====
+MAPS = {
+    "Grass":  {"dark": (167, 227, 93),  "light": (196, 237, 100), "border": (56, 74, 12),   "inner": (120, 170, 60)},
+    "Desert": {"dark": (224, 196, 124), "light": (240, 218, 156), "border": (120, 88, 32),  "inner": (200, 160, 90)},
+    "Ocean":  {"dark": (86, 158, 200),  "light": (120, 186, 222), "border": (28, 70, 104),  "inner": (150, 205, 235)},
+    "Night":  {"dark": (42, 50, 74),    "light": (56, 66, 94),    "border": (16, 20, 34),   "inner": (90, 110, 150)},
+    "Candy":  {"dark": (232, 150, 192), "light": (246, 182, 212), "border": (120, 48, 92),  "inner": (255, 210, 232)},
+    "Lava":   {"dark": (70, 40, 36),    "light": (96, 52, 44),    "border": (30, 14, 12),   "inner": (210, 90, 40)},
+}
+selected_map = "Grass"
+
+
+def set_map(name):
+    global selected_map
+    if name in MAPS:
+        selected_map = name
 
 
 class SNAKE:
@@ -49,6 +87,9 @@ class SNAKE:
 
 
     def draw_snake(self):
+        if selected_skin != "Classic":
+            self.draw_snake_skin(SKINS[selected_skin])
+            return
         self.update_head_graphics()
         self.update_tail_graphics()
 
@@ -78,6 +119,43 @@ class SNAKE:
                         screen.blit(self.body_tr, block_rect)
                     elif previous_block.x == 1 and next_block.y == 1 or previous_block.y == 1 and next_block.x == 1:
                         screen.blit(self.body_br, block_rect)
+
+    def draw_snake_skin(self, palette):
+        n = len(self.body)
+        body, body2 = palette["body"], palette["body2"]
+        for index, block in enumerate(self.body):
+            rect = pygame.Rect(int(block.x * cell_size), int(block.y * cell_size), cell_size, cell_size)
+            if index == 0:
+                self.draw_head_skin(rect, palette)
+                continue
+            # Gradient từ đầu (body) tới đuôi (body2) -> đổi màu theo độ dài
+            t = index / max(1, n - 1)
+            col = (int(body[0] + (body2[0] - body[0]) * t),
+                   int(body[1] + (body2[1] - body[1]) * t),
+                   int(body[2] + (body2[2] - body[2]) * t))
+            inner = tuple(max(0, c - 30) for c in col)
+            pygame.draw.rect(screen, col, rect.inflate(-2, -2), border_radius=7)
+            pygame.draw.rect(screen, inner, rect.inflate(-9, -9), border_radius=4)
+
+    def draw_head_skin(self, rect, palette):
+        pygame.draw.rect(screen, palette["head"], rect.inflate(-1, -1), border_radius=8)
+        # Hướng đầu rắn để đặt mắt
+        if len(self.body) >= 2:
+            facing = self.body[0] - self.body[1]
+        else:
+            facing = Vector2(1, 0)
+        fx, fy = int(facing.x), int(facing.y)
+        cx, cy = rect.center
+        off = int(cell_size * 0.22)
+        eye_r = max(2, cell_size // 6)
+        pupil_r = max(1, cell_size // 14)
+        if fx != 0:
+            eyes = [(cx + fx * off, cy - off), (cx + fx * off, cy + off)]
+        else:
+            eyes = [(cx - off, cy + fy * off), (cx + off, cy + fy * off)]
+        for ex, ey in eyes:
+            pygame.draw.circle(screen, palette["eye"], (ex, ey), eye_r)
+            pygame.draw.circle(screen, palette["pupil"], (ex + fx * 2, ey + fy * 2), pupil_r)
 
     def update_head_graphics(self):
 
@@ -158,6 +236,7 @@ class MAIN:
         self.GameOver = False
         self.GamePause = False
         self.path = []
+        self.effects = []   # hiệu ứng chớp sáng + "+1" khi ăn mồi
 
         self.background_image = pygame.image.load('assets/Back.png').convert_alpha()
         self.background_image = pygame.transform.scale(self.background_image, (800, cell_number * cell_size))
@@ -193,19 +272,40 @@ class MAIN:
         if any(obstacle.pos == self.snake.body[0] for obstacle in self.obstacles):
             self.game_over()
     def draw_elements(self):
-        screen.blit(self.background_image, (0, 0))
+        # Bỏ overlay ảnh nền để chủ đề MAP (bàn cờ) hiển thị
+        # screen.blit(self.background_image, (0, 0))
         # self.draw_grass()
         self.fruit.draw_fruit()
         self.snake.draw_snake()
         for obstacle in self.obstacles:
             obstacle.draw_obstacle()
+        self.draw_effects()
         self.draw_score()
+
+    def draw_effects(self):
+        for fx in self.effects[:]:
+            fx['age'] += 1
+            age = fx['age']
+            cx = int(fx['pos'].x * cell_size + cell_size // 2)
+            cy = int(fx['pos'].y * cell_size + cell_size // 2)
+            radius = cell_size // 2 + age * 2
+            alpha = max(0, 180 - age * 9)
+            if alpha > 0:
+                surf = pygame.Surface((radius * 2 + 2, radius * 2 + 2), pygame.SRCALPHA)
+                pygame.draw.circle(surf, (255, 255, 180, alpha), (radius + 1, radius + 1), radius, 3)
+                screen.blit(surf, (cx - radius - 1, cy - radius - 1))
+            txt = game_font.render("+1", True, (255, 240, 120))
+            txt.set_alpha(max(0, 255 - age * 12))
+            screen.blit(txt, txt.get_rect(center=(cx, cy - age * 2)))
+            if age > 20:
+                self.effects.remove(fx)
 
     def check_collision(self):
         if self.fruit.pos == self.snake.body[0]:  # lúc con rắn ăn thức ăn(vị trí thức ăn và rắn trùng nhau)
+            self.effects.append({'pos': Vector2(self.snake.body[0]), 'age': 0})
+            audio.play_eat()
             self.fruit.randomize()  # thức ăn random đến chỗ mới
             self.snake.add_block()  # rắn thêm 1 block
-            # self.snake.play_crunch_sound()
 
         # for block in self.snake.body[1:]:
         #     if block == self.fruit.pos:
@@ -242,33 +342,38 @@ class MAIN:
                     pygame.draw.rect(screen, grass_color, grass_rect)
 
     def draw_score(self):
-        score_text = str(len(self.snake.body) - 3)
-        score_surface = game_font.render(score_text, True, (56, 74, 12))
-        score_x = int(cell_size * cell_number - 60)
-        score_y = int(cell_size * cell_number - 40)
-        score_rect = score_surface.get_rect(center=(score_x, score_y))
-        apple_rect = apple.get_rect(midright=(score_rect.left, score_rect.centery))
-        bg_rect = pygame.Rect(apple_rect.left, apple_rect.top, apple_rect.width + score_rect.width + 6,
-                              apple_rect.height)
+        score = len(self.snake.body) - 3
+        label_surf = game_font.render("Score:", True, (190, 215, 130))
+        value_surf = game_font.render(str(score), True, (245, 250, 220))
+        panel_x, panel_y = 14, 14
+        pad, gap, h = 12, 8, 34
+        w = pad * 2 + label_surf.get_width() + gap + value_surf.get_width()
 
-        pygame.draw.rect(screen, (167, 209, 61), bg_rect)
-        screen.blit(score_surface, score_rect)
-        screen.blit(apple, apple_rect)
-        pygame.draw.rect(screen, (56, 74, 12), bg_rect, 2)
+        bg = pygame.Surface((w, h), pygame.SRCALPHA)
+        pygame.draw.rect(bg, (28, 45, 12, 190), bg.get_rect(), border_radius=10)
+        pygame.draw.rect(bg, (167, 209, 61), bg.get_rect(), 2, border_radius=10)
+        screen.blit(bg, (panel_x, panel_y))
+
+        cy = panel_y + (h - label_surf.get_height()) // 2
+        screen.blit(label_surf, (panel_x + pad, cy))
+        screen.blit(value_surf, (panel_x + pad + label_surf.get_width() + gap, cy))
 
 
 
     def draw_board_with_border(self):
-        dark_green = (167, 227, 93)
-        light_green = (196, 237, 100)
-        border_color = (87, 145, 42)
+        theme = MAPS.get(selected_map, MAPS["Grass"])
+        dark, light = theme["dark"], theme["light"]
 
         for row in range(cell_number):
             for col in range(cell_number):
                 x0, y0 = col * cell_size, row * cell_size
-                color = dark_green if (row + col) % 2 == 0 else light_green
+                color = dark if (row + col) % 2 == 0 else light
                 pygame.draw.rect(screen, color, pygame.Rect(x0, y0, cell_size, cell_size))
-        pygame.draw.rect(screen, border_color, pygame.Rect(0, 0, cell_number * cell_size, cell_number * cell_size), 10)
+
+        # Viền đôi tạo chiều sâu: khung ngoài đậm + đường trong sáng
+        full = pygame.Rect(0, 0, cell_number * cell_size, cell_number * cell_size)
+        pygame.draw.rect(screen, theme["border"], full, 8)
+        pygame.draw.rect(screen, theme["inner"], full.inflate(-8, -8), 3)
 
 class OBSTACLE:
     def __init__(self):
