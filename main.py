@@ -16,6 +16,7 @@ import Snake_BFS
 import Snake_BiBFS
 import Snake_Beam
 import Snake_IDAStar
+import Snake_SafeAStar
 import os
 import time
 
@@ -587,6 +588,17 @@ def idastar_option():
     _ai_loop('IDA*', fn)
 
 
+def safe_option():
+    print("Safe A* Option Selected")
+
+    def fn(sk, fr, ob):
+        view, path = Snake_SafeAStar.Snake_SafeAStar.safe_a_star(sk, fr, ob)
+        Snake_SafeAStar.Snake_SafeAStar.follow_path(sk, path)
+        return view, path
+
+    _ai_loop('SAFE', fn)
+
+
 # Mapping of options to functions
 option_functions = {
     "BFS": bfs_option,
@@ -599,6 +611,7 @@ option_functions = {
     "BIBFS": bibfs_option,
     "BEAM": beam_option,
     "IDA*": idastar_option,
+    "SAFE": safe_option,
 }
 def draw_text_with_shadow(text, font, color, center, shadow=(20, 30, 10), offset=3):
     """Vẽ chữ có đổ bóng để tiêu đề nổi bật hơn."""
@@ -656,13 +669,15 @@ def fruit_run_view(path_to_fruit_view):
 
 
 # ===================== NGHIÊN CỨU / BENCHMARK =====================
-benchmark_results = []          # mỗi phần tử: dict số liệu 1 lần chạy
+benchmark_results = []          # mỗi phần tử: dict số liệu (đã gộp trung bình)
 benchmark_selected = set()      # các thuật toán được tick chọn
 bench_level = 'easy'
 bench_speed = 50
+bench_runs = 1                  # số ván chạy mỗi thuật toán để lấy trung bình
 
 _LEVEL_OBS = {'easy': 0, 'medium': 50, 'hard': 100}
 _SPEED_CYCLE = [100, 50, 25, 12]
+_RUNS_CYCLE = [1, 5, 10, 20]
 
 
 def _search_normalized(label, sk, fr, ob):
@@ -688,6 +703,8 @@ def _search_normalized(label, sk, fr, ob):
         return Snake_Beam.Snake_Beam.beam_search(sk, fr, ob)
     if label == "IDA*":
         return Snake_IDAStar.Snake_IDAStar.ida_star(sk, fr, ob)
+    if label == "SAFE":
+        return Snake_SafeAStar.Snake_SafeAStar.safe_a_star(sk, fr, ob)
     return [], []
 
 
@@ -706,7 +723,7 @@ def _bench_fps(speed):
     return max(30, min(120, 1000 // max(1, speed)))
 
 
-def run_one_benchmark(label, level_key, n_obs, speed, idx, total):
+def run_one_benchmark(label, level_key, n_obs, speed, idx, total, run_no=1, run_total=1):
     """Chạy 1 ván cho 1 thuật toán đến khi rắn chết. Trả về dict số liệu."""
     main_game = MAIN(n_obs)
     main_game.snake.direction = Vector2(1, 0)
@@ -726,8 +743,8 @@ def run_one_benchmark(label, level_key, n_obs, speed, idx, total):
         main_game.draw_board_with_border()
         main_game.draw_elements()
         fruit_view(last_visited)
-        draw_text_with_shadow(f"{label}   ({idx}/{total})", get_font(34), (255, 222, 60),
-                              (SCREEN.get_width() // 2, 24))
+        title = f"{label}   ({idx}/{total})" + (f"   run {run_no}/{run_total}" if run_total > 1 else "")
+        draw_text_with_shadow(title, get_font(30), (255, 222, 60), (SCREEN.get_width() // 2, 24))
         info = get_font(18).render(
             f"Lv:{level_key}  Score:{last_score}  Steps:{steps}  FPS:{fps}   "
             f"[SPACE]Pause [UP/DOWN]Speed [ESC]Skip", True, (245, 250, 220))
@@ -793,20 +810,53 @@ def save_benchmark_csv():
     try:
         with open(path, 'w', newline='', encoding='utf-8') as f:
             w = csv.writer(f)
-            w.writerow(['Algorithm', 'Level', 'Speed', 'Score', 'Steps', 'Nodes', 'Time(s)', 'Nodes/Step', 'Capped'])
+            w.writerow(['Algorithm', 'Level', 'Speed', 'Runs',
+                        'Score', 'Score_std', 'Steps', 'Steps_std',
+                        'Nodes', 'Nodes_std', 'Time(s)', 'Time_std', 'Nodes/Step'])
             for r in benchmark_results:
-                w.writerow([r['algo'], r['level'], r['speed'], r['score'], r['steps'],
-                            r['nodes'], r['time'], r['nps'], r['capped']])
+                w.writerow([r['algo'], r['level'], r['speed'], r.get('runs', 1),
+                            r['score'], r.get('score_std', 0), r['steps'], r.get('steps_std', 0),
+                            r['nodes'], r.get('nodes_std', 0), r['time'], r.get('time_std', 0), r['nps']])
     except Exception as e:
         print("CSV save error:", e)
 
 
-def run_benchmark(selected, level_key, speed):
+def _aggregate(label, level_key, speed, runs_data):
+    import statistics
+
+    def ms(key):
+        vals = [r[key] for r in runs_data]
+        m = sum(vals) / len(vals)
+        s = statistics.pstdev(vals) if len(vals) > 1 else 0.0
+        return m, s
+
+    sc_m, sc_s = ms('score')
+    st_m, st_s = ms('steps')
+    nd_m, nd_s = ms('nodes')
+    tm_m, tm_s = ms('time')
+    np_m, _ = ms('nps')
+    return {
+        'algo': label, 'level': level_key, 'speed': speed, 'runs': len(runs_data),
+        'score': round(sc_m, 1), 'score_std': round(sc_s, 1),
+        'steps': round(st_m, 1), 'steps_std': round(st_s, 1),
+        'nodes': int(nd_m), 'nodes_std': int(nd_s),
+        'time': round(tm_m, 2), 'time_std': round(tm_s, 2),
+        'nps': round(np_m, 1),
+    }
+
+
+def run_benchmark(selected, level_key, speed, runs):
     order = [a for a in option_functions.keys() if a in selected]
     n_obs = _LEVEL_OBS.get(level_key, 0)
     for idx, label in enumerate(order):
-        res = run_one_benchmark(label, level_key, n_obs, speed, idx + 1, len(order))
-        benchmark_results.append(res)
+        runs_data = []
+        for k in range(runs):
+            res = run_one_benchmark(label, level_key, n_obs, speed, idx + 1, len(order), k + 1, runs)
+            if res['aborted']:
+                break          # ESC -> bỏ qua các ván còn lại của thuật toán này
+            runs_data.append(res)
+        if runs_data:
+            benchmark_results.append(_aggregate(label, level_key, speed, runs_data))
     save_benchmark_csv()
     benchmark_report()
 
@@ -838,16 +888,19 @@ def show_benchmark_charts():
         return
     rows = benchmark_results
     labels = [f"{r['algo']}\n{r['level'][:3]}" for r in rows]
-    metrics = [('Score (fruits)', 'score', 'tab:green'),
-               ('Steps survived', 'steps', 'tab:blue'),
-               ('Nodes expanded', 'nodes', 'tab:red'),
-               ('Time (s)', 'time', 'tab:orange')]
+    metrics = [('Score (fruits)', 'score', 'score_std', 'tab:green'),
+               ('Steps survived', 'steps', 'steps_std', 'tab:blue'),
+               ('Nodes expanded', 'nodes', 'nodes_std', 'tab:red'),
+               ('Time (s)', 'time', 'time_std', 'tab:orange')]
     try:
         fig, axes = plt.subplots(2, 2, figsize=(12, 7))
-        fig.suptitle('Snake AI - So sanh thuat toan', fontsize=14, fontweight='bold')
-        for ax, (title, key, c) in zip(axes.flat, metrics):
+        nmax = max(r.get('runs', 1) for r in rows)
+        fig.suptitle(f'Snake AI - So sanh thuat toan (trung binh {nmax} van, error bar = do lech chuan)',
+                     fontsize=13, fontweight='bold')
+        for ax, (title, key, skey, c) in zip(axes.flat, metrics):
             vals = [r[key] for r in rows]
-            bars = ax.bar(range(len(rows)), vals, color=c)
+            errs = [r.get(skey, 0) for r in rows]
+            bars = ax.bar(range(len(rows)), vals, yerr=errs, capsize=3, color=c)
             ax.set_title(title)
             ax.set_xticks(range(len(rows)))
             ax.set_xticklabels(labels, rotation=45, ha='right', fontsize=8)
@@ -865,8 +918,8 @@ def show_benchmark_charts():
 
 def benchmark_report():
     grad = make_gradient((20, 30, 46), (8, 12, 20))
-    headers = ['Algo', 'Lvl', 'Spd', 'Score', 'Steps', 'Nodes', 'Time', 'N/Step']
-    col_x = [36, 165, 230, 300, 390, 480, 600, 690]
+    headers = ['Algo', 'Lvl', 'Runs', 'Score', 'Steps', 'Nodes', 'Time', 'N/Step']
+    col_x = [36, 165, 235, 305, 395, 485, 600, 690]
     row_h = 34
     top = 150
     scroll = 0
@@ -889,7 +942,7 @@ def benchmark_report():
             r = benchmark_results[i]
             y = top + (i - scroll) * row_h
             color = (120, 255, 120) if (r['score'] == best and best > 0) else (235, 245, 215)
-            vals = [r['algo'], r['level'][:3], str(r['speed']), str(r['score']), str(r['steps']),
+            vals = [r['algo'], r['level'][:3], str(r.get('runs', 1)), str(r['score']), str(r['steps']),
                     str(r['nodes']), str(r['time']), str(r['nps'])]
             for v, x in zip(vals, col_x):
                 SCREEN.blit(get_font(19).render(v, True, color), (x, y))
@@ -922,30 +975,31 @@ def benchmark_report():
 
 
 def benchmark_menu():
-    global bench_level, bench_speed
+    global bench_level, bench_speed, bench_runs
     grad = make_gradient((20, 30, 46), (8, 12, 20))
     algos = list(option_functions.keys())
-    col_w, row_h, gap_x, gap_y = 240, 52, 30, 14
+    col_w, row_h, gap_x, gap_y = 240, 44, 30, 10
     start_x = (SCREEN.get_width() - (2 * col_w + gap_x)) // 2
-    start_y = 130
+    start_y = 126
     toggles = []
     for i, name in enumerate(algos):
         c, r = i % 2, i // 2
         rect = pygame.Rect(start_x + c * (col_w + gap_x), start_y + r * (row_h + gap_y), col_w, row_h)
         toggles.append((rect, name))
 
-    level_rect = pygame.Rect(150, 470, 240, 56)
-    speed_rect = pygame.Rect(410, 470, 240, 56)
-    start_rect = pygame.Rect(150, 540, 240, 56)
-    report_rect = pygame.Rect(410, 540, 240, 56)
-    clear_rect = pygame.Rect(150, 610, 240, 56)
-    back_rect = pygame.Rect(410, 610, 240, 56)
+    level_rect = pygame.Rect(70, 455, 210, 52)
+    speed_rect = pygame.Rect(295, 455, 210, 52)
+    runs_rect = pygame.Rect(520, 455, 210, 52)
+    start_rect = pygame.Rect(150, 520, 240, 52)
+    report_rect = pygame.Rect(410, 520, 240, 52)
+    clear_rect = pygame.Rect(150, 585, 240, 52)
+    back_rect = pygame.Rect(410, 585, 240, 52)
 
     while True:
         SCREEN.blit(grad, (0, 0))
         MOUSE = pygame.mouse.get_pos()
         draw_text_with_shadow("RESEARCH", get_font(54), (255, 222, 60), (SCREEN.get_width() // 2, 60))
-        sub = get_font(20).render("Tick chon thuat toan -> START (moi thuat toan chay 1 van den khi chet)",
+        sub = get_font(18).render("Tick chon thuat toan -> START. Runs = so van/thuat toan de lay trung binh +- do lech chuan",
                                   True, (200, 215, 175))
         SCREEN.blit(sub, sub.get_rect(center=(SCREEN.get_width() // 2, 100)))
 
@@ -954,6 +1008,7 @@ def benchmark_menu():
 
         draw_menu_button(level_rect, f"Level: {bench_level}", MOUSE)
         draw_menu_button(speed_rect, f"Speed: {bench_speed}", MOUSE)
+        draw_menu_button(runs_rect, f"Runs: {bench_runs}", MOUSE)
         draw_menu_button(start_rect, "START", MOUSE, selected=bool(benchmark_selected))
         draw_menu_button(report_rect, "REPORT", MOUSE)
         draw_menu_button(clear_rect, "CLEAR", MOUSE)
@@ -976,8 +1031,11 @@ def benchmark_menu():
                 elif speed_rect.collidepoint(MOUSE):
                     bench_speed = _SPEED_CYCLE[(_SPEED_CYCLE.index(bench_speed) + 1) % len(_SPEED_CYCLE)] \
                         if bench_speed in _SPEED_CYCLE else _SPEED_CYCLE[0]
+                elif runs_rect.collidepoint(MOUSE):
+                    bench_runs = _RUNS_CYCLE[(_RUNS_CYCLE.index(bench_runs) + 1) % len(_RUNS_CYCLE)] \
+                        if bench_runs in _RUNS_CYCLE else _RUNS_CYCLE[0]
                 elif start_rect.collidepoint(MOUSE) and benchmark_selected:
-                    run_benchmark(benchmark_selected, bench_level, bench_speed)
+                    run_benchmark(benchmark_selected, bench_level, bench_speed, bench_runs)
                 elif report_rect.collidepoint(MOUSE):
                     benchmark_report()
                 elif clear_rect.collidepoint(MOUSE):
