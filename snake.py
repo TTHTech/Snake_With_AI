@@ -1,4 +1,4 @@
-import pygame, sys, random
+import pygame, sys, random, math
 from pygame.math import Vector2
 import Snake_Dijikstra
 import audio
@@ -25,12 +25,12 @@ def set_skin(name):
 
 # ===== Hệ thống MAP (chủ đề bàn cờ) =====
 MAPS = {
-    "Grass":  {"dark": (167, 227, 93),  "light": (196, 237, 100), "border": (56, 74, 12),   "inner": (120, 170, 60),  "obs": ("square",   (120, 120, 120))},
-    "Desert": {"dark": (224, 196, 124), "light": (240, 218, 156), "border": (120, 88, 32),  "inner": (200, 160, 90),  "obs": ("triangle", (205, 165, 95))},
-    "Ocean":  {"dark": (86, 158, 200),  "light": (120, 186, 222), "border": (28, 70, 104),  "inner": (150, 205, 235), "obs": ("diamond",  (40, 90, 130))},
-    "Night":  {"dark": (42, 50, 74),    "light": (56, 66, 94),    "border": (16, 20, 34),   "inner": (90, 110, 150),  "obs": ("circle",   (150, 120, 205))},
-    "Candy":  {"dark": (232, 150, 192), "light": (246, 182, 212), "border": (120, 48, 92),  "inner": (255, 210, 232), "obs": ("circle",   (235, 110, 170))},
-    "Lava":   {"dark": (70, 40, 36),    "light": (96, 52, 44),    "border": (30, 14, 12),   "inner": (210, 90, 40),   "obs": ("ember",    (80, 40, 36))},
+    "Grass":  {"dark": (167, 227, 93),  "light": (196, 237, 100), "border": (56, 74, 12),   "inner": (120, 170, 60),  "obs": ("square",   (120, 120, 120)), "food": ("apple",  (220, 50, 50))},
+    "Desert": {"dark": (224, 196, 124), "light": (240, 218, 156), "border": (120, 88, 32),  "inner": (200, 160, 90),  "obs": ("triangle", (205, 165, 95)),  "food": ("star",   (245, 200, 60))},
+    "Ocean":  {"dark": (86, 158, 200),  "light": (120, 186, 222), "border": (28, 70, 104),  "inner": (150, 205, 235), "obs": ("diamond",  (40, 90, 130)),   "food": ("gem",    (90, 220, 220))},
+    "Night":  {"dark": (42, 50, 74),    "light": (56, 66, 94),    "border": (16, 20, 34),   "inner": (90, 110, 150),  "obs": ("circle",   (150, 120, 205)), "food": ("star",   (200, 160, 255))},
+    "Candy":  {"dark": (232, 150, 192), "light": (246, 182, 212), "border": (120, 48, 92),  "inner": (255, 210, 232), "obs": ("circle",   (235, 110, 170)), "food": ("cherry", (235, 70, 130))},
+    "Lava":   {"dark": (70, 40, 36),    "light": (96, 52, 44),    "border": (30, 14, 12),   "inner": (210, 90, 40),   "obs": ("ember",    (80, 40, 36)),    "food": ("gem",    (255, 140, 40))},
 }
 selected_map = "Grass"
 
@@ -216,8 +216,38 @@ class FRUIT:
                 self.pos = Vector2(self.x, self.y)
                 break
     def draw_fruit(self):
-        fruit_rect = pygame.Rect(int(self.pos.x * cell_size), int(self.pos.y * cell_size), cell_size, cell_size)
-        screen.blit(apple, fruit_rect)  #
+        theme = MAPS.get(selected_map, MAPS["Grass"])
+        shape, color = theme["food"]
+        rect = pygame.Rect(int(self.pos.x * cell_size), int(self.pos.y * cell_size),
+                           cell_size, cell_size).inflate(-2, -2)
+        cx, cy = rect.center
+        r = rect.width // 2
+
+        if shape == "apple":
+            pygame.draw.circle(screen, color, (cx, cy + 1), r - 1)
+            pygame.draw.circle(screen, tuple(min(255, c + 60) for c in color), (cx - 3, cy - 2), 2)
+            pygame.draw.line(screen, (90, 60, 30), (cx, cy - r + 2), (cx, rect.top - 1), 2)
+            pygame.draw.circle(screen, (70, 170, 70), (cx + 4, rect.top), 3)
+        elif shape == "gem":
+            pts = [(cx, rect.top), (rect.right, cy), (cx, rect.bottom), (rect.left, cy)]
+            pygame.draw.polygon(screen, color, pts)
+            pygame.draw.polygon(screen, tuple(max(0, c - 70) for c in color), pts, 2)
+            pygame.draw.line(screen, (255, 255, 255), (cx, rect.top + 2), (cx - 3, cy), 1)
+        elif shape == "star":
+            pts = []
+            for k in range(10):
+                ang = -math.pi / 2 + k * math.pi / 5
+                rr = r if k % 2 == 0 else r * 0.45
+                pts.append((cx + rr * math.cos(ang), cy + rr * math.sin(ang)))
+            pygame.draw.polygon(screen, color, pts)
+            pygame.draw.polygon(screen, tuple(max(0, c - 70) for c in color), pts, 1)
+        elif shape == "cherry":
+            pygame.draw.circle(screen, color, (cx - 3, cy + 3), r - 3)
+            pygame.draw.circle(screen, color, (cx + 4, cy + 4), r - 4)
+            pygame.draw.circle(screen, (255, 255, 255), (cx - 5, cy + 1), 1)
+            pygame.draw.line(screen, (90, 140, 40), (cx - 3, cy - 2), (cx + 2, rect.top), 1)
+        else:
+            pygame.draw.circle(screen, color, (cx, cy), r - 1)
 
 
 

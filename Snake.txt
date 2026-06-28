@@ -1,0 +1,6 @@
+Thuật toán: BIBFS
+Chế độ hiện tại: medium
+Tốc độ rắn: 25
+Tổng số nút: 222595
+Thời gian chạy chương trình: 4.45
+Số nút(chi phí): 657
