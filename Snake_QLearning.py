@@ -92,15 +92,23 @@ def save_q():
         print("Q save error:", e)
 
 
-def train(episodes=5000, progress_cb=None):
-    """Huấn luyện headless. progress_cb(ep, episodes, avg, eps, best) trả False để dừng sớm."""
+def train(episodes=5000, progress_cb=None, obstacles='mixed', eps_start=1.0):
+    """Huấn luyện headless (học CỘNG DỒN vào bảng Q hiện có, không xóa).
+
+    obstacles: 'mixed' (ngẫu nhiên 0..100) hoặc một số nguyên cố định.
+    progress_cb(ep, episodes, avg, eps, best) trả False để dừng sớm.
+    """
     global Q
     import snake as snk
     scores = []
     best = 0
     for ep in range(episodes):
-        eps = max(0.01, 1.0 - ep / (episodes * 0.8))
-        game = snk.MAIN(0)
+        eps = max(0.01, eps_start * (1 - ep / (episodes * 0.8)))
+        if obstacles == 'mixed':
+            n_obs = random.choice([0, 0, 30, 50, 80, 100])
+        else:
+            n_obs = int(obstacles)
+        game = snk.MAIN(n_obs)
         game.snake.direction = Vector2(1, 0)
         state = get_state(game.snake, game.fruit, game.obstacles)
         food_eaten = 0

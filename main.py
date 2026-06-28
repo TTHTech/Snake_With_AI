@@ -1062,24 +1062,29 @@ def benchmark_menu():
         pygame.display.update()
 
 
-def train_qlearning_ui(episodes=8000):
+def run_qlearning_training(episodes, obstacles):
     grad = make_gradient((20, 30, 46), (8, 12, 20))
-    info = {'ep': 0, 'avg': 0.0, 'eps': 1.0, 'best': 0}
+    Snake_QLearning.load_q()                         # học CỘNG DỒN từ bảng hiện có
+    eps_start = 0.4 if Snake_QLearning.Q else 1.0    # đã có kiến thức -> ít khám phá lại
+    lvl_name = 'Mixed' if obstacles == 'mixed' else {0: 'Easy', 50: 'Medium', 100: 'Hard'}.get(obstacles, str(obstacles))
+    info = {'ep': 0, 'avg': 0.0, 'eps': eps_start, 'best': 0}
 
     def cb(ep, total, avg, eps, best):
         info.update(ep=ep, avg=avg, eps=eps, best=best)
         SCREEN.blit(grad, (0, 0))
-        draw_text_with_shadow("TRAINING Q-LEARNING", get_font(44), (255, 222, 60), (400, 110))
+        draw_text_with_shadow("TRAINING Q-LEARNING", get_font(44), (255, 222, 60), (400, 90))
         frac = ep / total
-        bar = pygame.Rect(150, 250, 500, 36)
+        bar = pygame.Rect(150, 210, 500, 34)
         pygame.draw.rect(SCREEN, (40, 60, 28), bar, border_radius=10)
         pygame.draw.rect(SCREEN, (120, 200, 90), (bar.x, bar.y, int(bar.width * frac), bar.height), border_radius=10)
         pygame.draw.rect(SCREEN, (255, 215, 60), bar, 2, border_radius=10)
-        lines = [f"Episode: {ep}/{total}", f"Avg score (100 van gan nhat): {avg:.1f}",
-                 f"Best: {best}", f"Explore (epsilon): {eps:.2f}", "Nhan ESC de dung som & luu"]
+        lines = [f"Level: {lvl_name}", f"Episode: {ep}/{total}",
+                 f"Avg score (100 van): {avg:.1f}", f"Best: {best}",
+                 f"Explore (epsilon): {eps:.2f}", f"States da hoc: {len(Snake_QLearning.Q)}",
+                 "Nhan ESC de dung som & luu"]
         for i, l in enumerate(lines):
-            s = get_font(24).render(l, True, (240, 248, 220))
-            SCREEN.blit(s, s.get_rect(center=(400, 330 + i * 36)))
+            s = get_font(22).render(l, True, (240, 248, 220))
+            SCREEN.blit(s, s.get_rect(center=(400, 290 + i * 32)))
         pygame.display.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -1089,15 +1094,16 @@ def train_qlearning_ui(episodes=8000):
                 return False
         return True
 
-    Snake_QLearning.train(episodes, cb)
+    Snake_QLearning.train(episodes, cb, obstacles=obstacles, eps_start=eps_start)
     Snake_QLearning.load_q()  # nạp lại bảng vừa học để chơi ngay
 
     while True:
         SCREEN.blit(grad, (0, 0))
         MOUSE = pygame.mouse.get_pos()
         draw_text_with_shadow("DONE!", get_font(60), (255, 222, 60), (400, 230))
-        s = get_font(26).render(f"Best: {info['best']}  |  Avg: {info['avg']:.1f}  |  Da luu qtable.json",
-                                True, (240, 248, 220))
+        s = get_font(23).render(
+            f"Best: {info['best']}  |  Avg: {info['avg']:.1f}  |  States: {len(Snake_QLearning.Q)}  |  Da luu",
+            True, (240, 248, 220))
         SCREEN.blit(s, s.get_rect(center=(400, 310)))
         ok = pygame.Rect(300, 410, 200, 56)
         draw_menu_button(ok, "OK", MOUSE)
@@ -1109,6 +1115,69 @@ def train_qlearning_ui(episodes=8000):
                 return
             if event.type == pygame.KEYDOWN:
                 return
+        pygame.display.update()
+
+
+def train_qlearning_menu():
+    grad = make_gradient((20, 30, 46), (8, 12, 20))
+    Snake_QLearning.load_q()
+    ep_text = "5000"
+    levels = [("Easy", 0), ("Medium", 50), ("Hard", 100), ("Mixed", "mixed")]
+    sel = 3  # mặc định Mixed
+    input_box = pygame.Rect(330, 190, 180, 56)
+    lvl_w, lvl_gap = 160, 15
+    lvl_x0 = (SCREEN.get_width() - (4 * lvl_w + 3 * lvl_gap)) // 2
+    lvl_rects = [pygame.Rect(lvl_x0 + i * (lvl_w + lvl_gap), 330, lvl_w, 56) for i in range(4)]
+    start_rect = pygame.Rect(220, 440, 170, 56)
+    back_rect = pygame.Rect(410, 440, 170, 56)
+
+    def _start():
+        eps_n = min(200000, max(100, int(ep_text))) if ep_text else 5000
+        run_qlearning_training(eps_n, levels[sel][1])
+
+    while True:
+        SCREEN.blit(grad, (0, 0))
+        MOUSE = pygame.mouse.get_pos()
+        draw_text_with_shadow("TRAIN Q-LEARNING", get_font(46), (255, 222, 60), (400, 80))
+        sub = get_font(19).render(
+            f"Hoc CONG DON vao bang hien co  -  da hoc: {len(Snake_QLearning.Q)} trang thai",
+            True, (200, 215, 175))
+        SCREEN.blit(sub, sub.get_rect(center=(400, 130)))
+
+        lbl = get_font(26).render("So van:", True, (240, 248, 220))
+        SCREEN.blit(lbl, lbl.get_rect(midright=(input_box.left - 14, input_box.centery)))
+        pygame.draw.rect(SCREEN, (235, 240, 220), input_box, border_radius=8)
+        pygame.draw.rect(SCREEN, (255, 215, 60), input_box, 3, border_radius=8)
+        txt = get_font(34).render(ep_text or "0", True, (20, 30, 15))
+        SCREEN.blit(txt, txt.get_rect(center=input_box.center))
+
+        lt = get_font(22).render("Level train:", True, (240, 248, 220))
+        SCREEN.blit(lt, lt.get_rect(center=(400, 300)))
+        for i, (name, _) in enumerate(levels):
+            draw_menu_button(lvl_rects[i], name, MOUSE, selected=(i == sel))
+
+        draw_menu_button(start_rect, "START", MOUSE, selected=True)
+        draw_menu_button(back_rect, "BACK", MOUSE)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_BACKSPACE:
+                    ep_text = ep_text[:-1]
+                elif event.key == pygame.K_RETURN:
+                    _start()
+                elif event.unicode.isdigit() and len(ep_text) < 6:
+                    ep_text += event.unicode
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                for i in range(4):
+                    if lvl_rects[i].collidepoint(MOUSE):
+                        sel = i
+                if start_rect.collidepoint(MOUSE):
+                    _start()
+                elif back_rect.collidepoint(MOUSE):
+                    return
         pygame.display.update()
 
 
@@ -1144,7 +1213,7 @@ def options():
                             main_menu()
                             return
                         elif label == "TRAIN-Q":
-                            train_qlearning_ui()
+                            train_qlearning_menu()
                         else:
                             option_functions[label]()
         pygame.display.update()
