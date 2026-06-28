@@ -17,6 +17,7 @@ import Snake_BiBFS
 import Snake_Beam
 import Snake_IDAStar
 import Snake_SafeAStar
+import Snake_QLearning
 import os
 import time
 
@@ -599,6 +600,18 @@ def safe_option():
     _ai_loop('SAFE', fn)
 
 
+def q_option():
+    print("Q-Learning Option Selected")
+    Snake_QLearning.load_q()
+
+    def fn(sk, fr, ob):
+        view, path = Snake_QLearning.best_action(sk, fr, ob)
+        Snake_QLearning.follow_path(sk, path)
+        return view, path
+
+    _ai_loop('QLEARN', fn)
+
+
 # Mapping of options to functions
 option_functions = {
     "BFS": bfs_option,
@@ -612,6 +625,7 @@ option_functions = {
     "BEAM": beam_option,
     "IDA*": idastar_option,
     "SAFE": safe_option,
+    "QLEARN": q_option,
 }
 def draw_text_with_shadow(text, font, color, center, shadow=(20, 30, 10), offset=3):
     """Vẽ chữ có đổ bóng để tiêu đề nổi bật hơn."""
@@ -705,6 +719,8 @@ def _search_normalized(label, sk, fr, ob):
         return Snake_IDAStar.Snake_IDAStar.ida_star(sk, fr, ob)
     if label == "SAFE":
         return Snake_SafeAStar.Snake_SafeAStar.safe_a_star(sk, fr, ob)
+    if label == "QLEARN":
+        return Snake_QLearning.best_action(sk, fr, ob)
     return [], []
 
 
@@ -1046,9 +1062,59 @@ def benchmark_menu():
         pygame.display.update()
 
 
+def train_qlearning_ui(episodes=8000):
+    grad = make_gradient((20, 30, 46), (8, 12, 20))
+    info = {'ep': 0, 'avg': 0.0, 'eps': 1.0, 'best': 0}
+
+    def cb(ep, total, avg, eps, best):
+        info.update(ep=ep, avg=avg, eps=eps, best=best)
+        SCREEN.blit(grad, (0, 0))
+        draw_text_with_shadow("TRAINING Q-LEARNING", get_font(44), (255, 222, 60), (400, 110))
+        frac = ep / total
+        bar = pygame.Rect(150, 250, 500, 36)
+        pygame.draw.rect(SCREEN, (40, 60, 28), bar, border_radius=10)
+        pygame.draw.rect(SCREEN, (120, 200, 90), (bar.x, bar.y, int(bar.width * frac), bar.height), border_radius=10)
+        pygame.draw.rect(SCREEN, (255, 215, 60), bar, 2, border_radius=10)
+        lines = [f"Episode: {ep}/{total}", f"Avg score (100 van gan nhat): {avg:.1f}",
+                 f"Best: {best}", f"Explore (epsilon): {eps:.2f}", "Nhan ESC de dung som & luu"]
+        for i, l in enumerate(lines):
+            s = get_font(24).render(l, True, (240, 248, 220))
+            SCREEN.blit(s, s.get_rect(center=(400, 330 + i * 36)))
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                return False
+        return True
+
+    Snake_QLearning.train(episodes, cb)
+    Snake_QLearning.load_q()  # nạp lại bảng vừa học để chơi ngay
+
+    while True:
+        SCREEN.blit(grad, (0, 0))
+        MOUSE = pygame.mouse.get_pos()
+        draw_text_with_shadow("DONE!", get_font(60), (255, 222, 60), (400, 230))
+        s = get_font(26).render(f"Best: {info['best']}  |  Avg: {info['avg']:.1f}  |  Da luu qtable.json",
+                                True, (240, 248, 220))
+        SCREEN.blit(s, s.get_rect(center=(400, 310)))
+        ok = pygame.Rect(300, 410, 200, 56)
+        draw_menu_button(ok, "OK", MOUSE)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN and ok.collidepoint(MOUSE):
+                return
+            if event.type == pygame.KEYDOWN:
+                return
+        pygame.display.update()
+
+
 def options():
     grad = make_gradient((24, 34, 52), (8, 12, 22))
-    items = list(option_functions.keys()) + ["BACK"]
+    items = list(option_functions.keys()) + ["TRAIN-Q", "BACK"]
     cols = 3
     card_w, card_h, gap_x, gap_y = 205, 78, 22, 20
     total_w = cols * card_w + (cols - 1) * gap_x
@@ -1077,7 +1143,10 @@ def options():
                         if label == "BACK":
                             main_menu()
                             return
-                        option_functions[label]()
+                        elif label == "TRAIN-Q":
+                            train_qlearning_ui()
+                        else:
+                            option_functions[label]()
         pygame.display.update()
 
 
