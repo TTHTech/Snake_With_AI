@@ -139,7 +139,7 @@ def play():
                             return
 
             if main_game.GameOver:
-                game_over_result = game_over()  # Nhận trạng thái trả về từ game_over
+                game_over_result = game_over(main_game)  # Nhận trạng thái trả về từ game_over
                 if game_over_result == "main_menu":
                     return
         screen.fill((175, 215, 70))
@@ -207,7 +207,7 @@ def handle_events(main_game):
             if event.key == pygame.K_ESCAPE or event.key == pygame.K_SPACE:
                 pause_menu()
         if main_game.GameOver:
-            game_over()
+            game_over(main_game)
             return True
     return False
 
@@ -296,7 +296,7 @@ def ucs_option():
                     if event.key == pygame.K_ESCAPE or event.key == pygame.K_SPACE:
                         pause_menu()
             if main_game.GameOver:
-                game_over()
+                game_over(main_game)
 
 
         SCREEN.fill((175, 215, 70))
@@ -350,7 +350,7 @@ def astar_option():
                     if event.key == pygame.K_ESCAPE or event.key == pygame.K_SPACE:
                         pause_menu()
             if main_game.GameOver:
-                game_over()
+                game_over(main_game)
         screen.fill((175, 215, 70))
         main_game.draw_board_with_border()
         main_game.draw_elements()
@@ -402,7 +402,7 @@ def greedy_option():
                     if event.key == pygame.K_ESCAPE or event.key == pygame.K_SPACE:
                         pause_menu()
             if main_game.GameOver:
-                game_over()
+                game_over(main_game)
         screen.fill((175, 215, 70))
         main_game.draw_board_with_border()
         main_game.draw_elements()
@@ -455,7 +455,7 @@ def dijkstra_option():
                     if event.key == pygame.K_ESCAPE or event.key == pygame.K_SPACE:
                         pause_menu()
             if main_game.GameOver:
-                game_over()
+                game_over(main_game)
         screen.fill((175, 215, 70))
         main_game.draw_board_with_border()
         main_game.draw_elements()
@@ -508,7 +508,7 @@ def hillclimbing_option():
                     if event.key == pygame.K_ESCAPE or event.key == pygame.K_SPACE:
                         pause_menu()
             if main_game.GameOver:
-                game_over()
+                game_over(main_game)
         screen.fill((175, 215, 70))
         main_game.draw_board_with_border()
         main_game.draw_elements()
@@ -1448,22 +1448,39 @@ def pause_menu():
     return "continue"
 
 
-def game_over():
+def game_over(main_game=None):
+    score = main_game.final_score if main_game is not None else 0
+    lines = [f"Score: {score}", f"Mode: {current_mode}", f"Level: {current_level}"]
+    if current_mode != 'manual':
+        lines.append(f"Time: {snake_time}s")
+        lines.append(f"Nodes: {block}")
+
+    btn_img = pygame.transform.scale(pygame.image.load("assets/button6.png"), (320, 88))
     while True:
         SCREEN.blit(ov, (0, 0))
         GAME_OVER_MOUSE_POS = pygame.mouse.get_pos()
 
-        GAME_OVER_TEXT = get_font(70).render("Game Over", True, "Red")
-        GAME_OVER_RECT = GAME_OVER_TEXT.get_rect(center=(400, 100))
+        draw_text_with_shadow("Game Over", get_font(70), (235, 60, 50), (400, 90))
 
-        NEW_GAME_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(400, 270),
-                                 text_input="New Game", font=get_font(40), base_color="yellow", hovering_color="red")
-        OPTIONS_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(400, 420),
-                                text_input="Setting", font=get_font(40), base_color="yellow", hovering_color="red")
-        QUIT_BUTTON = Button(image=pygame.image.load("assets/button6.png"), pos=(400, 570),
-                             text_input="Quit", font=get_font(40), base_color="yellow", hovering_color="red")
+        # Bảng thông tin sau khi chết
+        lh = 28
+        panel_w = 300
+        panel_h = len(lines) * lh + 20
+        px, py = 400 - panel_w // 2, 145
+        bg = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
+        pygame.draw.rect(bg, (10, 15, 25, 190), bg.get_rect(), border_radius=12)
+        pygame.draw.rect(bg, (255, 215, 60), bg.get_rect(), 2, border_radius=12)
+        SCREEN.blit(bg, (px, py))
+        for i, ln in enumerate(lines):
+            s = get_font(24).render(ln, True, (240, 248, 220))
+            SCREEN.blit(s, s.get_rect(center=(400, py + 18 + i * lh)))
 
-        draw_text_with_shadow("Game Over", get_font(70), (235, 60, 50), (400, 100))
+        NEW_GAME_BUTTON = Button(image=btn_img, pos=(400, 380),
+                                 text_input="New Game", font=get_font(36), base_color="yellow", hovering_color="red")
+        OPTIONS_BUTTON = Button(image=btn_img, pos=(400, 490),
+                                text_input="Setting", font=get_font(36), base_color="yellow", hovering_color="red")
+        QUIT_BUTTON = Button(image=btn_img, pos=(400, 600),
+                             text_input="Quit", font=get_font(36), base_color="yellow", hovering_color="red")
 
         for button in [NEW_GAME_BUTTON, OPTIONS_BUTTON, QUIT_BUTTON]:
             button.changeColor(GAME_OVER_MOUSE_POS)

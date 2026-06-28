@@ -25,12 +25,12 @@ def set_skin(name):
 
 # ===== Hệ thống MAP (chủ đề bàn cờ) =====
 MAPS = {
-    "Grass":  {"dark": (167, 227, 93),  "light": (196, 237, 100), "border": (56, 74, 12),   "inner": (120, 170, 60)},
-    "Desert": {"dark": (224, 196, 124), "light": (240, 218, 156), "border": (120, 88, 32),  "inner": (200, 160, 90)},
-    "Ocean":  {"dark": (86, 158, 200),  "light": (120, 186, 222), "border": (28, 70, 104),  "inner": (150, 205, 235)},
-    "Night":  {"dark": (42, 50, 74),    "light": (56, 66, 94),    "border": (16, 20, 34),   "inner": (90, 110, 150)},
-    "Candy":  {"dark": (232, 150, 192), "light": (246, 182, 212), "border": (120, 48, 92),  "inner": (255, 210, 232)},
-    "Lava":   {"dark": (70, 40, 36),    "light": (96, 52, 44),    "border": (30, 14, 12),   "inner": (210, 90, 40)},
+    "Grass":  {"dark": (167, 227, 93),  "light": (196, 237, 100), "border": (56, 74, 12),   "inner": (120, 170, 60),  "obs": ("square",   (120, 120, 120))},
+    "Desert": {"dark": (224, 196, 124), "light": (240, 218, 156), "border": (120, 88, 32),  "inner": (200, 160, 90),  "obs": ("triangle", (205, 165, 95))},
+    "Ocean":  {"dark": (86, 158, 200),  "light": (120, 186, 222), "border": (28, 70, 104),  "inner": (150, 205, 235), "obs": ("diamond",  (40, 90, 130))},
+    "Night":  {"dark": (42, 50, 74),    "light": (56, 66, 94),    "border": (16, 20, 34),   "inner": (90, 110, 150),  "obs": ("circle",   (150, 120, 205))},
+    "Candy":  {"dark": (232, 150, 192), "light": (246, 182, 212), "border": (120, 48, 92),  "inner": (255, 210, 232), "obs": ("circle",   (235, 110, 170))},
+    "Lava":   {"dark": (70, 40, 36),    "light": (96, 52, 44),    "border": (30, 14, 12),   "inner": (210, 90, 40),   "obs": ("ember",    (80, 40, 36))},
 }
 selected_map = "Grass"
 
@@ -237,6 +237,7 @@ class MAIN:
         self.GamePause = False
         self.path = []
         self.effects = []   # hiệu ứng chớp sáng + "+1" khi ăn mồi
+        self.final_score = 0  # điểm đạt được, lưu trước khi rắn reset
 
         self.background_image = pygame.image.load('assets/Back.png').convert_alpha()
         self.background_image = pygame.transform.scale(self.background_image, (800, cell_number * cell_size))
@@ -321,10 +322,12 @@ class MAIN:
             if len(self.snake.body) == 3 and self.snake.body[0] == Vector2(5, 10) and self.snake.body[1] == Vector2(5,10) and self.snake.body[2] == Vector2(4, 10):
                 self.snake.reset()
             elif self.snake.body[0] == block:
+                self.final_score = len(self.snake.body) - 3
                 self.snake.reset()
                 self.GameOver = True
 
     def game_over(self):
+        self.final_score = len(self.snake.body) - 3
         self.GameOver = True
         self.snake.reset()
         self.reset_obstacles()
@@ -384,9 +387,32 @@ class OBSTACLE:
         self.randomize()
 
     def draw_obstacle(self):
+        theme = MAPS.get(selected_map, MAPS["Grass"])
+        shape, color = theme["obs"]
+        x = int(self.pos.x * cell_size)
+        y = int(self.pos.y * cell_size)
+        rect = pygame.Rect(x, y, cell_size, cell_size).inflate(-2, -2)
+        dark = tuple(max(0, c - 55) for c in color)
 
-        obstacle_rect = pygame.Rect(int(self.pos.x * cell_size), int(self.pos.y * cell_size), cell_size, cell_size)
-        screen.blit(self.image, obstacle_rect)
+        if shape == "square":
+            pygame.draw.rect(screen, color, rect, border_radius=4)
+            pygame.draw.rect(screen, dark, rect, 2, border_radius=4)
+        elif shape == "circle":
+            pygame.draw.circle(screen, color, rect.center, rect.width // 2)
+            pygame.draw.circle(screen, dark, rect.center, rect.width // 2, 2)
+        elif shape == "triangle":
+            pts = [(rect.centerx, rect.top), (rect.left, rect.bottom), (rect.right, rect.bottom)]
+            pygame.draw.polygon(screen, color, pts)
+            pygame.draw.polygon(screen, dark, pts, 2)
+        elif shape == "diamond":
+            pts = [(rect.centerx, rect.top), (rect.right, rect.centery),
+                   (rect.centerx, rect.bottom), (rect.left, rect.centery)]
+            pygame.draw.polygon(screen, color, pts)
+            pygame.draw.polygon(screen, dark, pts, 2)
+        elif shape == "ember":
+            pygame.draw.rect(screen, color, rect, border_radius=4)
+            pygame.draw.circle(screen, (240, 120, 40), rect.center, rect.width // 4)
+            pygame.draw.rect(screen, (20, 10, 8), rect, 2, border_radius=4)
     def randomize(self):
         snake_start_positions = [(5, 10), (4, 10), (3, 10)]  # Vị trí bắt đầu cố định của rắn
         while True:
