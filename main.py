@@ -1347,22 +1347,10 @@ def new_game():
     else:
         n_obstacles = 0
 
-    if current_mode == 'manual':
-        play()
-    elif current_mode == 'BFS':
-        bfs_option()
-    elif current_mode == 'DFS':
-        dfs_option()
-    elif current_mode == 'UCS':
-        ucs_option()
-    elif current_mode == 'A.STAR':
-        astar_option()
-    elif current_mode == 'GREEDY':
-        greedy_option()
-    elif current_mode == 'DIJKSTRA':
-        dijkstra_option()
-    elif current_mode == 'HCB':
-        hillclimbing_option()
+    if current_mode in option_functions:
+        option_functions[current_mode]()   # mọi thuật toán AI (gồm BIBFS/BEAM/IDA*/SAFE)
+    else:
+        play()                              # manual hoặc mặc định
 
 
 def level_menu():
